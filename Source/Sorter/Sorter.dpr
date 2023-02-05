@@ -2,7 +2,7 @@ program Sorter;
 
 uses
   Forms,
-  Main in '..\..\Files\Main.pas' {fMain};
+  Main in 'Main.pas' {fMain};
 
 {$R *.res}
 

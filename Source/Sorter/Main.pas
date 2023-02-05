@@ -1,4 +1,4 @@
-unit Main;
+п»їunit Main;
 
 interface
 
@@ -42,16 +42,16 @@ type
     fOutFilePath
                  : String;
 
-    fPbCurPos, fPbOldPos,                                                       // Переменная для прогресбара
-    fFsCurSize,                                                                 // Текущий размер файла
-    fFsMaxSize                                                                  // Максимальный размер файла
+    fPbCurPos, fPbOldPos,                                                       // РџРµСЂРµРјРµРЅРЅР°СЏ РґР»СЏ РїСЂРѕРіСЂРµСЃР±Р°СЂР°
+    fFsCurSize,                                                                 // РўРµРєСѓС‰РёР№ СЂР°Р·РјРµСЂ С„Р°Р№Р»Р°
+    fFsMaxSize                                                                  // РњР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ С„Р°Р№Р»Р°
                  : Int64;
 
     fMultiTh     : Boolean;                                                     //
 
-    //fPDictionary : DictArr;                                                     // Словарь, только чтение
+    //fPDictionary : DictArr;                                                     // РЎР»РѕРІР°СЂСЊ, С‚РѕР»СЊРєРѕ С‡С‚РµРЅРёРµ
 
-    fArrRndDict  : TStringList;                                                 // Контейнер для сгенерированных данных
+    fArrRndDict  : TStringList;                                                 // РљРѕРЅС‚РµР№РЅРµСЂ РґР»СЏ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹С… РґР°РЅРЅС‹С…
 
     fArrZipTable  : ZipTable;
 
@@ -65,12 +65,12 @@ type
     Procedure BinToAscii(const Bin: array of Byte; FrStart, FrEnd : Integer; var Str, Number : AnsiString);
     Procedure SaveToTxt( SortArr  : Array of Integer; StrName : String );
   public
-    property AInFilePath   : String   write fInFilePath;                        // Передача параметров в поток
+    property AInFilePath   : String   write fInFilePath;                        // РџРµСЂРµРґР°С‡Р° РїР°СЂР°РјРµС‚СЂРѕРІ РІ РїРѕС‚РѕРє
     property AOutFilePath  : String   write fOutFilePath;
     //property APDictionary  : DictArr  write FPDictionary; 
     property AMultiTh      : Boolean  write fMultiTh;
 
-    Procedure ShowProgress;                                                     // Функция синхронизации с интерфейсом главного окна
+    Procedure ShowProgress;                                                     // Р¤СѓРЅРєС†РёСЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё СЃ РёРЅС‚РµСЂС„РµР№СЃРѕРј РіР»Р°РІРЅРѕРіРѕ РѕРєРЅР°
 
     constructor Create();
     destructor Destroy; override ;
@@ -93,7 +93,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure l_FilePathClick(Sender: TObject);
   private
-    procedure WMOnWM_MYINFO(var msg: TMessage); message WM_MY_SORT_INFO;              // Обработка сообщений из потока
+    procedure WMOnWM_MYINFO(var msg: TMessage); message WM_MY_SORT_INFO;              // РћР±СЂР°Р±РѕС‚РєР° СЃРѕРѕР±С‰РµРЅРёР№ РёР· РїРѕС‚РѕРєР°
   public
     workDir,
     inFilePath
@@ -159,7 +159,7 @@ Begin
 End;    }
 
 
-procedure TfMain.WMOnWM_MYINFO(var msg: TMessage);                              // Обработчик сообщений из потока
+procedure TfMain.WMOnWM_MYINFO(var msg: TMessage);                              // РћР±СЂР°Р±РѕС‚С‡РёРє СЃРѕРѕР±С‰РµРЅРёР№ РёР· РїРѕС‚РѕРєР°
 var
   msgType,
   msgVal
@@ -170,31 +170,31 @@ begin
 
   case msgType of
 
-    1: // Вариант передвижения прогрес бара
+    1: // Р’Р°СЂРёР°РЅС‚ РїРµСЂРµРґРІРёР¶РµРЅРёСЏ РїСЂРѕРіСЂРµСЃ Р±Р°СЂР°
        Begin
          // PbShowMessage(msgVal, '');
        End;
 
-    2: // Информация, полученная от потока
+    2: // РРЅС„РѕСЂРјР°С†РёСЏ, РїРѕР»СѓС‡РµРЅРЅР°СЏ РѕС‚ РїРѕС‚РѕРєР°
        Begin
          case msgVal of
 
-           1..2 : // Завершился или прервался без аварии
+           1..2 : // Р—Р°РІРµСЂС€РёР»СЃСЏ РёР»Рё РїСЂРµСЂРІР°Р»СЃСЏ Р±РµР· Р°РІР°СЂРёРё
                  Begin
                    fMain.b_FindFile.Enabled      := true;
-                   fMain.b_FindFile.Caption      := 'Сортировать';
+                   fMain.b_FindFile.Caption      := 'РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ';
 
                  End;
 
-           3 :   // Поток разрушен в деструкторе
+           3 :   // РџРѕС‚РѕРє СЂР°Р·СЂСѓС€РµРЅ РІ РґРµСЃС‚СЂСѓРєС‚РѕСЂРµ
                  Begin
                    thSort := nil;
                  End;
 
-           4 :   // Одна из функций вернула ошибку
+           4 :   // РћРґРЅР° РёР· С„СѓРЅРєС†РёР№ РІРµСЂРЅСѓР»Р° РѕС€РёР±РєСѓ
                  Begin
                    fMain.b_FindFile.Enabled      := true;
-                   fMain.b_FindFile.Caption      := 'Сортировать';
+                   fMain.b_FindFile.Caption      := 'РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ';
                  End;
 
            5 :   Begin
@@ -241,9 +241,9 @@ Begin
     Begin
       if Sorting (fArrZipTable) then
       Begin
-        // Сообщение - Операция завершена
+        // РЎРѕРѕР±С‰РµРЅРёРµ - РћРїРµСЂР°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР°
         fPbCurPos := 0;
-        fMes      := 'Операция выполнена! - Файл находится -> ' + fOutFilePath;
+        fMes      := 'РћРїРµСЂР°С†РёСЏ РІС‹РїРѕР»РЅРµРЅР°! - Р¤Р°Р№Р» РЅР°С…РѕРґРёС‚СЃСЏ -> ' + fOutFilePath;
         Synchronize(ShowProgress);
         PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 1 );
         exit;
@@ -251,9 +251,9 @@ Begin
     End;
 
   except
-    // Сообщение - Операция не завершена
+    // РЎРѕРѕР±С‰РµРЅРёРµ - РћРїРµСЂР°С†РёСЏ РЅРµ Р·Р°РІРµСЂС€РµРЅР°
     fPbCurPos := 0;
-    fMes      := 'Операция не выполнена!';
+    fMes      := 'РћРїРµСЂР°С†РёСЏ РЅРµ РІС‹РїРѕР»РЅРµРЅР°!';
     Synchronize(ShowProgress);
     PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 4 );
   end;
@@ -403,9 +403,9 @@ Begin
       If Terminated then
       Begin
         fPbCurPos := 0;
-        fMes := 'Операция прервана!';
+        fMes := 'РћРїРµСЂР°С†РёСЏ РїСЂРµСЂРІР°РЅР°!';
         Synchronize(ShowProgress);
-        // Сообщение - Операция прервана
+        // РЎРѕРѕР±С‰РµРЅРёРµ - РћРїРµСЂР°С†РёСЏ РїСЂРµСЂРІР°РЅР°
         PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 2 );
         exit;
       End;
@@ -414,7 +414,7 @@ Begin
       if fPbCurPos <>  fPbOldPos then
       Begin
         fPbOldPos := fPbCurPos;
-        fMes := 'Сортировка прочитанных данных: ' + IntToStr(fPbCurPos)+'%';
+        fMes := 'РЎРѕСЂС‚РёСЂРѕРІРєР° РїСЂРѕС‡РёС‚Р°РЅРЅС‹С… РґР°РЅРЅС‹С…: ' + IntToStr(fPbCurPos)+'%';
         Synchronize(ShowProgress);
       End;
 
@@ -422,7 +422,7 @@ Begin
       if fndIdx >= 0 then
       Begin
 
-        // Заполняем временный массив
+        // Р—Р°РїРѕР»РЅСЏРµРј РІСЂРµРјРµРЅРЅС‹Р№ РјР°СЃСЃРёРІ
         setLength( GSortedStrZipTable[i], length(ArrZipTable[fndIdx]) );
         for j := 0 to length(ArrZipTable[fndIdx]) -1 do
         begin
@@ -506,9 +506,9 @@ begin
       If Terminated then
       Begin
         fPbCurPos := 0;
-        fMes := 'Операция прервана!';
+        fMes := 'РћРїРµСЂР°С†РёСЏ РїСЂРµСЂРІР°РЅР°!';
         Synchronize(ShowProgress);
-        // Сообщение - Операция прервана
+        // РЎРѕРѕР±С‰РµРЅРёРµ - РћРїРµСЂР°С†РёСЏ РїСЂРµСЂРІР°РЅР°
         PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 2 );
         exit;
       End;
@@ -522,14 +522,14 @@ begin
       if fPbCurPos <>  fPbOldPos then
       Begin
         fPbOldPos := fPbCurPos;
-        fMes := 'Анализ структуры файала: ' + IntToStr(fPbCurPos)+'%';
+        fMes := 'РђРЅР°Р»РёР· СЃС‚СЂСѓРєС‚СѓСЂС‹ С„Р°Р№Р°Р»Р°: ' + IntToStr(fPbCurPos)+'%';
         Synchronize(ShowProgress);
       End;
 
       fs.Seek(readStart, soBeginning);
       readed := fs.Read( buf, length(buf)-1 );
 
-      // Ищем окончание текстового блока с учетом перевода каретки
+      // РС‰РµРј РѕРєРѕРЅС‡Р°РЅРёРµ С‚РµРєСЃС‚РѕРІРѕРіРѕ Р±Р»РѕРєР° СЃ СѓС‡РµС‚РѕРј РїРµСЂРµРІРѕРґР° РєР°СЂРµС‚РєРё
       if readed > 0 then
       Begin
         if readed < 2 then
@@ -594,7 +594,7 @@ End;
 destructor TThSorter.Destroy;
 Begin
 
-  // Сообщение - Можно освободить, поток закончил свой путь
+  // РЎРѕРѕР±С‰РµРЅРёРµ - РњРѕР¶РЅРѕ РѕСЃРІРѕР±РѕРґРёС‚СЊ, РїРѕС‚РѕРє Р·Р°РєРѕРЅС‡РёР» СЃРІРѕР№ РїСѓС‚СЊ
   PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 3 );
 End;
 
@@ -602,7 +602,7 @@ End;
 
 
 
-Procedure TThSorter.ShowProgress;                                               // ShowProgress - Работа с интерфейсом главной формы
+Procedure TThSorter.ShowProgress;                                               // ShowProgress - Р Р°Р±РѕС‚Р° СЃ РёРЅС‚РµСЂС„РµР№СЃРѕРј РіР»Р°РІРЅРѕР№ С„РѕСЂРјС‹
 Begin
   fMain.pb_Main.Position := fPbCurPos;
   fMain.l_PbInfo.caption := fMes;
@@ -647,7 +647,7 @@ begin
 
 end;
 
-function TThSorter.GetStartFileSize( FileName: string): Int64;                  // GetStartFileSize - Определяем размер файла
+function TThSorter.GetStartFileSize( FileName: string): Int64;                  // GetStartFileSize - РћРїСЂРµРґРµР»СЏРµРј СЂР°Р·РјРµСЂ С„Р°Р№Р»Р°
 var
   FS: TFilestream;
 begin
@@ -662,7 +662,7 @@ begin
   FS.Free;
 end;
 
-function TThSorter.MakeMemSize(Size: Int64): String;                            // MakeMemSize - Человекочитаемый формат размера файла
+function TThSorter.MakeMemSize(Size: Int64): String;                            // MakeMemSize - Р§РµР»РѕРІРµРєРѕС‡РёС‚Р°РµРјС‹Р№ С„РѕСЂРјР°С‚ СЂР°Р·РјРµСЂР° С„Р°Р№Р»Р°
 const
   kb = 1024;
   mb = kb*kb;
@@ -690,34 +690,34 @@ end;
 
 procedure TfMain.b_FindFileClick(Sender: TObject);
 begin
- if fMain.b_FindFile.Caption = 'Выбрать' then
+ if fMain.b_FindFile.Caption = 'Р’С‹Р±СЂР°С‚СЊ' then
  begin
    od_InputFile.InitialDir := workDir;
-   od_InputFile.Filter     := 'Текстовые файлы|*.txt';
+   od_InputFile.Filter     := 'РўРµРєСЃС‚РѕРІС‹Рµ С„Р°Р№Р»С‹|*.txt';
 
    if od_InputFile.Execute then
    Begin
      inFilePath               := od_InputFile.FileName;
-     fMain.l_FilePath.caption := 'Файл: ' + inFilePath;
+     fMain.l_FilePath.caption := 'Р¤Р°Р№Р»: ' + inFilePath;
 
-     // Проверяем есть ли наш формат внутри
-     fMain.b_FindFile.Caption := 'Сортировать';
+     // РџСЂРѕРІРµСЂСЏРµРј РµСЃС‚СЊ Р»Рё РЅР°С€ С„РѕСЂРјР°С‚ РІРЅСѓС‚СЂРё
+     fMain.b_FindFile.Caption := 'РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ';
    End;
  end
 
  else
 
- if fMain.b_FindFile.Caption = 'Сортировать' then
+ if fMain.b_FindFile.Caption = 'РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ' then
  begin
-    // Разблокируется при завершении потока - WMOnWM_MYINFO
-    fMain.b_FindFile.Caption      := 'Прервать';
+    // Р Р°Р·Р±Р»РѕРєРёСЂСѓРµС‚СЃСЏ РїСЂРё Р·Р°РІРµСЂС€РµРЅРёРё РїРѕС‚РѕРєР° - WMOnWM_MYINFO
+    fMain.b_FindFile.Caption      := 'РџСЂРµСЂРІР°С‚СЊ';
     fMain.pb_Main.Visible         := true;
 
     if not Assigned(thSort) then
     Begin
       thSort    := TThSorter.Create();
       try
-        // Передаем параметры в поток
+        // РџРµСЂРµРґР°РµРј РїР°СЂР°РјРµС‚СЂС‹ РІ РїРѕС‚РѕРє
         thSort.AInFilePath  := inFilePath;
         thSort.AOutFilePath := workDir + '\sorted.txt';
         thSort.AMultiTh := true;
@@ -731,7 +731,7 @@ begin
 
  else
 
- if fMain.b_FindFile.Caption = 'Прервать' then
+ if fMain.b_FindFile.Caption = 'РџСЂРµСЂРІР°С‚СЊ' then
   Begin
     if Assigned(thSort) then
     Begin
@@ -756,7 +756,7 @@ procedure TfMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
 if Assigned(thSort) then
   Begin
-    // Сигнализируем потоку о завершении.
+    // РЎРёРіРЅР°Р»РёР·РёСЂСѓРµРј РїРѕС‚РѕРєСѓ Рѕ Р·Р°РІРµСЂС€РµРЅРёРё.
     thSort.Terminate;
     sleep(500);
     application.ProcessMessages;
@@ -765,7 +765,7 @@ end;
 
 procedure TfMain.FormCreate(Sender: TObject);                                   // FormCreate
 begin
-  // Размеры формы при resize
+  // Р Р°Р·РјРµСЂС‹ С„РѕСЂРјС‹ РїСЂРё resize
   with Constraints do
   Begin
         MaxHeight := 140;
@@ -774,7 +774,7 @@ begin
   End;
 
 
-  // Прогресбар
+  // РџСЂРѕРіСЂРµСЃР±Р°СЂ
   pb_Main := TProgressBar.Create(sb_Main);
   with pb_Main do
   begin
@@ -789,7 +789,7 @@ begin
     Smooth      := true;
   end;
 
-  // Надпись на Прогресбаре
+  // РќР°РґРїРёСЃСЊ РЅР° РџСЂРѕРіСЂРµСЃР±Р°СЂРµ
   l_PbInfo := TLabel.Create(pb_Main);
   with l_PbInfo do
   Begin
@@ -977,7 +977,7 @@ end.
 //      posDot2   := pos('.', fullStr2);
 //      str2      := copy(fullStr2, posDot2+1, length(fullStr2)-posDot2+1);
 //
-//      // Конец отсортированных значений
+//      // РљРѕРЅРµС† РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№
 //      if ( str1 <> str2 ) or ( j = List.count-1 ) then
 //      Begin
 //        segmentEnd := j - 1;

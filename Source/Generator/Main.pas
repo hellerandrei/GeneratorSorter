@@ -1,4 +1,4 @@
-unit Main;
+п»їunit Main;
 
 interface
 
@@ -22,32 +22,32 @@ type
     fFilePath
                  : String;
 
-    fPbCurPos, fPbOldPos,                                                       // Переменная для прогресбара
-    fFsCurSize,                                                                 // Текущий размер файла
-    fFsMaxSize                                                                  // Максимальный размер файла
+    fPbCurPos, fPbOldPos,                                                       // РџРµСЂРµРјРµРЅРЅР°СЏ РґР»СЏ РїСЂРѕРіСЂРµСЃР±Р°СЂР°
+    fFsCurSize,                                                                 // РўРµРєСѓС‰РёР№ СЂР°Р·РјРµСЂ С„Р°Р№Р»Р°
+    fFsMaxSize                                                                  // РњР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ С„Р°Р№Р»Р°
                  : Int64;
 
-    fOwerWrite   : Boolean;                                                     // Перезапись файла или запись в конец файла
+    fOwerWrite   : Boolean;                                                     // РџРµСЂРµР·Р°РїРёСЃСЊ С„Р°Р№Р»Р° РёР»Рё Р·Р°РїРёСЃСЊ РІ РєРѕРЅРµС† С„Р°Р№Р»Р°
 
-    fPDictionary : DictArr;                                                     // Словарь, только чтение
+    fPDictionary : DictArr;                                                     // РЎР»РѕРІР°СЂСЊ, С‚РѕР»СЊРєРѕ С‡С‚РµРЅРёРµ
 
-    fArrRndDict  : TStringList;                                                 // Контейнер для сгенерированных данных
+    fArrRndDict  : TStringList;                                                 // РљРѕРЅС‚РµР№РЅРµСЂ РґР»СЏ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹С… РґР°РЅРЅС‹С…
 
-    procedure GenerateBlock;                                                    // Генератор данных для записи в файл
-    procedure SaveToFile;                                                       // Запись сгенерированных данных в файл
+    procedure GenerateBlock;                                                    // Р“РµРЅРµСЂР°С‚РѕСЂ РґР°РЅРЅС‹С… РґР»СЏ Р·Р°РїРёСЃРё РІ С„Р°Р№Р»
+    procedure SaveToFile;                                                       // Р—Р°РїРёСЃСЊ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹С… РґР°РЅРЅС‹С… РІ С„Р°Р№Р»
 
-    function GetStartFileSize( FileName: string;                                // Определитель размера фала для дозаписи
-                               Overwriting : Boolean = true): Int64;            // Или создатель нового файла
+    function GetStartFileSize( FileName: string;                                // РћРїСЂРµРґРµР»РёС‚РµР»СЊ СЂР°Р·РјРµСЂР° С„Р°Р»Р° РґР»СЏ РґРѕР·Р°РїРёСЃРё
+                               Overwriting : Boolean = true): Int64;            // РР»Рё СЃРѕР·РґР°С‚РµР»СЊ РЅРѕРІРѕРіРѕ С„Р°Р№Р»Р°
     function MakeMemSize(Size: Int64): String;
 
   public
-    property AMaxSize     : Int64   write FFsMaxSize;                             // Передача параметров в поток
+    property AMaxSize     : Int64   write FFsMaxSize;                             // РџРµСЂРµРґР°С‡Р° РїР°СЂР°РјРµС‚СЂРѕРІ РІ РїРѕС‚РѕРє
     property AMes         : String  write FMes;
     property APDictionary : DictArr write FPDictionary;
     property AFilePath    : String  write fFilePath;
     property AOwerWrite   : Boolean write fOwerWrite;
 
-    Procedure ShowProgress;                                                     // Функция синхронизации с интерфейсом главного окна
+    Procedure ShowProgress;                                                     // Р¤СѓРЅРєС†РёСЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё СЃ РёРЅС‚РµСЂС„РµР№СЃРѕРј РіР»Р°РІРЅРѕРіРѕ РѕРєРЅР°
 
     constructor Create();
     destructor Destroy; override ;
@@ -77,7 +77,7 @@ type
     procedure FormResize(Sender: TObject);
   private
     Procedure DictionaryPrepare();
-    procedure WMOnWM_MYINFO(var msg: TMessage); message WM_MY_GEN_INFO;              // Обработка сообщений из потока
+    procedure WMOnWM_MYINFO(var msg: TMessage); message WM_MY_GEN_INFO;              // РћР±СЂР°Р±РѕС‚РєР° СЃРѕРѕР±С‰РµРЅРёР№ РёР· РїРѕС‚РѕРєР°
   public
     FilePath   : String;
     pb_Main    : TProgressBar;
@@ -90,17 +90,17 @@ var
   thGen         : TThGenerator;
 
 const
-  MIN_FILESIZE    = 536870912;                                                  // Минимальный размер файла в байтах
-  MAX_FILESIZE    = 10737418240;                                                // Максимальный размер файла в байтах
-  FILE_NAME       = 'result.txt';                                               // Имя создаваемого файла
-  MAX_INT_RANGE   = 99999;                                                      // Размер рандома для Number
+  MIN_FILESIZE    = 536870912;                                                  // РњРёРЅРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ С„Р°Р№Р»Р° РІ Р±Р°Р№С‚Р°С…
+  MAX_FILESIZE    = 10737418240;                                                // РњР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ С„Р°Р№Р»Р° РІ Р±Р°Р№С‚Р°С…
+  FILE_NAME       = 'result.txt';                                               // РРјСЏ СЃРѕР·РґР°РІР°РµРјРѕРіРѕ С„Р°Р№Р»Р°
+  MAX_INT_RANGE   = 99999;                                                      // Р Р°Р·РјРµСЂ СЂР°РЅРґРѕРјР° РґР»СЏ Number
 
 implementation
 
 {$R *.dfm}
 
 
-procedure TfMain.WMOnWM_MYINFO(var msg: TMessage);                              // Обработчик сообщений из потока
+procedure TfMain.WMOnWM_MYINFO(var msg: TMessage);                              // РћР±СЂР°Р±РѕС‚С‡РёРє СЃРѕРѕР±С‰РµРЅРёР№ РёР· РїРѕС‚РѕРєР°
 var
   msgType,
   msgVal
@@ -111,21 +111,21 @@ begin
 
   case msgType of
 
-    1: // Вариант передвижения прогрес бара
+    1: // Р’Р°СЂРёР°РЅС‚ РїРµСЂРµРґРІРёР¶РµРЅРёСЏ РїСЂРѕРіСЂРµСЃ Р±Р°СЂР°
        Begin
          // PbShowMessage(msgVal, '');
        End;
 
-    2: // Информация, полученная от потока
+    2: // РРЅС„РѕСЂРјР°С†РёСЏ, РїРѕР»СѓС‡РµРЅРЅР°СЏ РѕС‚ РїРѕС‚РѕРєР°
        Begin
          case msgVal of
 
-           1..2 : // Завершился или прервался без аварии
+           1..2 : // Р—Р°РІРµСЂС€РёР»СЃСЏ РёР»Рё РїСЂРµСЂРІР°Р»СЃСЏ Р±РµР· Р°РІР°СЂРёРё
                  Begin
                    fMain.tb_FileSize.Enabled     := true;
                    fMain.b_Generate.Enabled      := true;
                    fMain.chb_OwerWriting.enabled := true;
-                   fMain.b_Generate.Caption      := 'Сгенерировать';
+                   fMain.b_Generate.Caption      := 'РЎРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ';
 
                    if FileExists(FilePath) then
                    Begin
@@ -133,14 +133,14 @@ begin
                    End;
                  End;
 
-           3 :   // Поток разрушен в деструкторе
+           3 :   // РџРѕС‚РѕРє СЂР°Р·СЂСѓС€РµРЅ РІ РґРµСЃС‚СЂСѓРєС‚РѕСЂРµ
                  Begin
                    thGen := nil;
                  End;
 
-           4 :   // При дозаписи, пользователь указал размер, меньше исходного
+           4 :   // РџСЂРё РґРѕР·Р°РїРёСЃРё, РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ СѓРєР°Р·Р°Р» СЂР°Р·РјРµСЂ, РјРµРЅСЊС€Рµ РёСЃС…РѕРґРЅРѕРіРѕ
                  Begin
-                   if MessageDlg('Выбранный размер, превышает уже имеющийся размер файла! Перезапишем?', mtError, mbOKCancel, 0) = mrOK then
+                   if MessageDlg('Р’С‹Р±СЂР°РЅРЅС‹Р№ СЂР°Р·РјРµСЂ, РїСЂРµРІС‹С€Р°РµС‚ СѓР¶Рµ РёРјРµСЋС‰РёР№СЃСЏ СЂР°Р·РјРµСЂ С„Р°Р№Р»Р°! РџРµСЂРµР·Р°РїРёС€РµРј?', mtError, mbOKCancel, 0) = mrOK then
                    Begin
                      fMain.chb_OwerWriting.checked := true;
                      fMain.b_Generate.Click;
@@ -150,7 +150,7 @@ begin
                      fMain.tb_FileSize.Enabled     := true;
                      fMain.b_Generate.Enabled      := true;
                      fMain.chb_OwerWriting.enabled := true;
-                     fMain.b_Generate.Caption      := 'Сгенерировать';
+                     fMain.b_Generate.Caption      := 'РЎРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ';
                    End;
                  End;
          end;
@@ -162,7 +162,7 @@ End;
 
 
 
-procedure TfMain.b_GenerateClick(Sender: TObject);                              // b_Generate - Создание, завершение потока
+procedure TfMain.b_GenerateClick(Sender: TObject);                              // b_Generate - РЎРѕР·РґР°РЅРёРµ, Р·Р°РІРµСЂС€РµРЅРёРµ РїРѕС‚РѕРєР°
 var
   fileSize  : Int64;
   owerWrite : Boolean;
@@ -172,12 +172,12 @@ begin
     chb_OwerWriting.visible := true;
   End;
 
-  if fMain.b_Generate.Caption = 'Сгенерировать' then
+  if fMain.b_Generate.Caption = 'РЎРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ' then
   Begin
-    // Разблокируется при завершении потока - WMOnWM_MYINFO
+    // Р Р°Р·Р±Р»РѕРєРёСЂСѓРµС‚СЃСЏ РїСЂРё Р·Р°РІРµСЂС€РµРЅРёРё РїРѕС‚РѕРєР° - WMOnWM_MYINFO
     fMain.tb_FileSize.Enabled     := false;
     fMain.chb_OwerWriting.enabled := false;
-    fMain.b_Generate.Caption      := 'Прервать';
+    fMain.b_Generate.Caption      := 'РџСЂРµСЂРІР°С‚СЊ';
 
     fileSize     := fMain.tb_FileSize.Position;
     fileSize     := fileSize *(1024*1024);
@@ -188,7 +188,7 @@ begin
     Begin
       thGen    := TThGenerator.Create();
       try
-        // Передаем параметры в поток
+        // РџРµСЂРµРґР°РµРј РїР°СЂР°РјРµС‚СЂС‹ РІ РїРѕС‚РѕРє
         thGen.AMes         := '';
         thGen.APDictionary := Dictionary;
         thGen.AMaxSize     := fileSize;
@@ -224,9 +224,9 @@ Begin
   Begin
     If Terminated then
     Begin
-      fMes := 'Операция прервана!';
+      fMes := 'РћРїРµСЂР°С†РёСЏ РїСЂРµСЂРІР°РЅР°!';
       Synchronize(ShowProgress);
-      // Сообщение - Операция прервана
+      // РЎРѕРѕР±С‰РµРЅРёРµ - РћРїРµСЂР°С†РёСЏ РїСЂРµСЂРІР°РЅР°
       PostMessage( fMain.Handle, WM_MY_GEN_INFO, 2, 2 );
       break;
     End;
@@ -246,16 +246,16 @@ Begin
 
   if fFsCurSize > ( fFsMaxSize + length(FPDictionary) * 255 ) then
   Begin
-    // Сообщение о некорректном размере дозаписываемого файла
+    // РЎРѕРѕР±С‰РµРЅРёРµ Рѕ РЅРµРєРѕСЂСЂРµРєС‚РЅРѕРј СЂР°Р·РјРµСЂРµ РґРѕР·Р°РїРёСЃС‹РІР°РµРјРѕРіРѕ С„Р°Р№Р»Р°
     PostMessage( fMain.Handle, WM_MY_GEN_INFO, 2, 4 );
     exit;
   End;
 
   fPbCurPos := 0;
-  fMes := 'Операция выполнена! - Файл находится -> ' + fFilePath;
+  fMes := 'РћРїРµСЂР°С†РёСЏ РІС‹РїРѕР»РЅРµРЅР°! - Р¤Р°Р№Р» РЅР°С…РѕРґРёС‚СЃСЏ -> ' + fFilePath;
   Synchronize(ShowProgress);
 
-  // Сообщение - Операция завершена
+  // РЎРѕРѕР±С‰РµРЅРёРµ - РћРїРµСЂР°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР°
   PostMessage( fMain.Handle, WM_MY_GEN_INFO, 2, 1 );
 End;
 
@@ -275,13 +275,13 @@ destructor TThGenerator.Destroy;
 Begin
   SetLength( FPDictionary, 0 );
 
-  // Сообщение - Можно освободить, поток закончил свой путь
+  // РЎРѕРѕР±С‰РµРЅРёРµ - РњРѕР¶РЅРѕ РѕСЃРІРѕР±РѕРґРёС‚СЊ, РїРѕС‚РѕРє Р·Р°РєРѕРЅС‡РёР» СЃРІРѕР№ РїСѓС‚СЊ
   PostMessage( fMain.Handle, WM_MY_GEN_INFO, 2, 3 );
 End;
 
 
 
-Procedure TThGenerator.GenerateBlock();                                         // GenerateBlock - Генерируем блок строк, опираясь на словарь
+Procedure TThGenerator.GenerateBlock();                                         // GenerateBlock - Р“РµРЅРµСЂРёСЂСѓРµРј Р±Р»РѕРє СЃС‚СЂРѕРє, РѕРїРёСЂР°СЏСЃСЊ РЅР° СЃР»РѕРІР°СЂСЊ
 var
   rndInt,
   rndStr,
@@ -316,7 +316,7 @@ Begin
 End;
 
 
-Procedure TThGenerator.SaveToFile();                                            // SaveToFile - Запись в файл
+Procedure TThGenerator.SaveToFile();                                            // SaveToFile - Р—Р°РїРёСЃСЊ РІ С„Р°Р№Р»
 var
   fs          : TFileStream;
 begin
@@ -332,7 +332,7 @@ begin
 end;
 
 
-Procedure TThGenerator.ShowProgress;                                            // ShowProgress - Работа с интерфейсом главной формы
+Procedure TThGenerator.ShowProgress;                                            // ShowProgress - Р Р°Р±РѕС‚Р° СЃ РёРЅС‚РµСЂС„РµР№СЃРѕРј РіР»Р°РІРЅРѕР№ С„РѕСЂРјС‹
 Begin
   fMain.pb_Main.Position := fPbCurPos;
   fMain.l_PbInfo.caption := fMes;
@@ -341,7 +341,7 @@ End;
 
 
 function TThGenerator.GetStartFileSize( FileName: string;
-                                        Overwriting : Boolean = true): Int64;   // GetStartFileSize - Определяем размер файла
+                                        Overwriting : Boolean = true): Int64;   // GetStartFileSize - РћРїСЂРµРґРµР»СЏРµРј СЂР°Р·РјРµСЂ С„Р°Р№Р»Р°
 var
   FS: TFilestream;
 begin
@@ -359,7 +359,7 @@ begin
   FS.Free;
 end;
 
-function TThGenerator.MakeMemSize(Size: Int64): String;                         // MakeMemSize - Человекочитаемый формат размера файла
+function TThGenerator.MakeMemSize(Size: Int64): String;                         // MakeMemSize - Р§РµР»РѕРІРµРєРѕС‡РёС‚Р°РµРјС‹Р№ С„РѕСЂРјР°С‚ СЂР°Р·РјРµСЂР° С„Р°Р№Р»Р°
 const
   kb = 1024;
   mb = kb*kb;
@@ -390,7 +390,7 @@ begin
 end;
 
 
-Procedure TfMain.DictionaryPrepare();                                           // DictionaryPrepare - Подготовка словаря генерации
+Procedure TfMain.DictionaryPrepare();                                           // DictionaryPrepare - РџРѕРґРіРѕС‚РѕРІРєР° СЃР»РѕРІР°СЂСЏ РіРµРЅРµСЂР°С†РёРё
 var
   dictMaxSize, i   : Integer;
 Begin
@@ -412,7 +412,7 @@ procedure TfMain.FormClose(Sender: TObject; var Action: TCloseAction);          
 Begin
   if Assigned(thGen) then
   Begin
-    // Сигнализируем потоку о завершении.
+    // РЎРёРіРЅР°Р»РёР·РёСЂСѓРµРј РїРѕС‚РѕРєСѓ Рѕ Р·Р°РІРµСЂС€РµРЅРёРё.
     thGen.Terminate;
     sleep(500);
     application.ProcessMessages;
@@ -423,10 +423,10 @@ end;
 procedure TfMain.FormCreate(Sender: TObject);                                   // FormCreate
 
 begin
-  // Готовим словарь
+  // Р“РѕС‚РѕРІРёРј СЃР»РѕРІР°СЂСЊ
   self.DictionaryPrepare();
 
-  // Размеры формы при resize
+  // Р Р°Р·РјРµСЂС‹ С„РѕСЂРјС‹ РїСЂРё resize
   with Constraints do
   Begin
         MaxHeight := 140;
@@ -434,7 +434,7 @@ begin
         MinWidth  := 550;
   End;
 
-  // Прогресбар
+  // РџСЂРѕРіСЂРµСЃР±Р°СЂ
   pb_Main := TProgressBar.Create(sb_Main);
   with pb_Main do
   begin
@@ -449,7 +449,7 @@ begin
     Smooth      := true;
   end;
 
-  // Надпись на Прогресбаре
+  // РќР°РґРїРёСЃСЊ РЅР° РџСЂРѕРіСЂРµСЃР±Р°СЂРµ
   l_PbInfo := TLabel.Create(pb_Main);
   with l_PbInfo do
   Begin
@@ -465,7 +465,7 @@ begin
   GetDir(0, FilePath);
   FilePath  := FilePath + '\' + FILE_NAME;
 
-  // При первом запуске, когда файла еще нет, - не показываем кнопку.
+  // РџСЂРё РїРµСЂРІРѕРј Р·Р°РїСѓСЃРєРµ, РєРѕРіРґР° С„Р°Р№Р»Р° РµС‰Рµ РЅРµС‚, - РЅРµ РїРѕРєР°Р·С‹РІР°РµРј РєРЅРѕРїРєСѓ.
   if FileExists(FilePath) then
   Begin
     chb_OwerWriting.visible := true;
@@ -480,7 +480,7 @@ var
   maxPb
          : integer;
 begin
-  // Подгоняем шкалу
+  // РџРѕРґРіРѕРЅСЏРµРј С€РєР°Р»Сѓ
   freq  := Round ( ( MAX_FILESIZE/(1024*1024) - MIN_FILESIZE/(1024*1024) ) / 20 );
   minPB := Round( MIN_FILESIZE/(1024*1024) );
   maxPb := Round( MAX_FILESIZE/(1024*1024) );
