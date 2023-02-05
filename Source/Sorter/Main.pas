@@ -4,59 +4,54 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Menus, ComCtrls, StdCtrls, ExtCtrls;
+  Dialogs, Menus, ComCtrls, StdCtrls, ExtCtrls,
+
+  syncobjs
+  ;
 
 
 const WM_MY_SORT_INFO = WM_USER + 1;
 
 type
 
-  //DictArr    = Array of String;
+  DictArr    = Array of String;
   ZipTable   = Array [0..500] of array of Integer;
   ArrNoSort  = Array of integer;
 
-//................................ TThIntArrSorter ...................................
+//................................ TThIntArrSorter .............................
 
   TThIntArrSorter = class(TThread)
   private
-
+    fTempArr   : array of Integer;
     fIdx       : Integer;
-
+    procedure QuickSort( var a: array of integer; min, max: Integer);
   public
     fNoSortArr : ZipTable;
-    // property ANoSortArr   : ZipTable   write fNoSortArr;
     property AIdx   : Integer   write fIdx;
   protected
     procedure Execute; override;
   end;
-
-
+//..............................................................................
 
 
 //................................ TThSorter ...................................
 
   TThSorter = class(TThread)
   private
-    fMes,
-    fInFilePath,
-    fOutFilePath
+    fMes,                                                                       // Сообщение  для прогресбара
+    fInFilePath,                                                                // Исходный файл
+    fOutFilePath                                                                // Результирующий файл
                  : String;
 
-    fPbCurPos, fPbOldPos,                                                       // Переменная для прогресбара
-    fFsCurSize,                                                                 // Текущий размер файла
-    fFsMaxSize                                                                  // Максимальный размер файла
+    fPbCurPos, fPbOldPos                                                        // Переменные для прогресбара
                  : Int64;
 
-    fMultiTh     : Boolean;                                                     //
-
-    //fPDictionary : DictArr;                                                     // Словарь, только чтение
+    fMultiTh     : Boolean;                                                     // Многопоточно или последовательно, разница во времени
 
     fArrRndDict  : TStringList;                                                 // Контейнер для сгенерированных данных
 
     fArrZipTable  : ZipTable;
 
-    function GetStartFileSize( FileName: string): Int64;
-    function MakeMemSize(Size: Int64): String;
     function GetFileSize( FileName: string): Int64;
 
     Function CreateMatchArr() : boolean;
@@ -65,9 +60,9 @@ type
     Procedure BinToAscii(const Bin: array of Byte; FrStart, FrEnd : Integer; var Str, Number : AnsiString);
     Procedure SaveToTxt( SortArr  : Array of Integer; StrName : String );
   public
+
     property AInFilePath   : String   write fInFilePath;                        // Передача параметров в поток
     property AOutFilePath  : String   write fOutFilePath;
-    //property APDictionary  : DictArr  write FPDictionary; 
     property AMultiTh      : Boolean  write fMultiTh;
 
     Procedure ShowProgress;                                                     // Функция синхронизации с интерфейсом главного окна
@@ -87,23 +82,20 @@ type
     l_FilePath: TLabel;
     Panel2: TPanel;
     b_FindFile: TButton;
+    cb_MultiThread: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure b_FindFileClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure l_FilePathClick(Sender: TObject);
   private
-    procedure WMOnWM_MYINFO(var msg: TMessage); message WM_MY_SORT_INFO;              // Обработка сообщений из потока
+    procedure WMOnWM_MYINFO(var msg: TMessage); message WM_MY_SORT_INFO;        // Обработка сообщений из потоков
   public
     workDir,
-    inFilePath
+    inFilePath                                                                  // Исходный файл
                    : String;
 
     pb_Main        : TProgressBar;
     l_PbInfo       : TLabel;
-
-    Dictionary     : DictArr;
-    Function SortInt(  ) : boolean;
   end;
 
 const
@@ -112,51 +104,103 @@ const
 
 var
   fMain               : TfMain;
-  GArrMatching        : Array [0..500] of  String;
   thSort              : TThSorter;
+  CS                  : TCriticalSection;
+
+  GArrMatching        : Array [0..500] of  String;
   GSortedStrZipTable  : ZipTable;
+  GWorkerCnt                                                                  // Счетчик работающих потоков
+                      : Integer;
 
 implementation
 
 {$R *.dfm}
 
 
-Procedure TThIntArrSorter.Execute;                                                    // Execute
+
+//------------------------------ TThIntArrSorter -------------------------------
+
+Procedure TThIntArrSorter.Execute;                                              // Execute
 var
   i, j,
   tmpVal
              : Integer;
 Begin
-  i := 0;
-  while i <= Length(fNoSortArr[fIdx])-1 do
-  Begin
-    j := i + 1;
-    while j <= Length(fNoSortArr[fIdx])-1 do
+  try
+    setLength(fTempArr, Length(fNoSortArr[fIdx]));
+    for i := 0 to Length(fNoSortArr[fIdx]) -1 do
     Begin
-      if fNoSortArr[fIdx][i] > fNoSortArr[fIdx][j] then
-      Begin
-         tmpVal                 := fNoSortArr[fIdx][i];
-         fNoSortArr[fIdx][i]    := fNoSortArr[fIdx][j];
-         fNoSortArr[fIdx][j]    := tmpVal;
-      End;
-      inc(j);
+      fTempArr[i] := fNoSortArr[fIdx][i];
     End;
-    inc(i);
-  End;
+
+    // Сортируем массив
+    QuickSort(fTempArr, 0, length(fTempArr)-1);
+
+    for i := 0 to Length(fNoSortArr[fIdx]) -1 do
+    Begin
+      fNoSortArr[fIdx][i] := fTempArr[i];
+    End;
+
+    setLength(fTempArr, 0);
+
+  finally
+    // Сотировка завершена
+    CS.Enter;
+    try
+      GWorkerCnt := GWorkerCnt - 1;
+
+    finally
+      CS.Leave;
+    end;
+  end;
+
+
+
 
 End;
 
-{constructor TThIntArrSorter.Create();
+// Сортировка массива Integer
+procedure TThIntArrSorter.QuickSort( var a: array of integer; min, max: Integer);
+Var
+  i,j,
+  mid,
+  tmp
+          : integer;
 Begin
-  Randomize;
-  Inherited Create(True) ;
-  FreeOnTerminate := true;
-End;
+  if min < max then
+  begin
+    mid :=fTempArr [min];
+    i := min-1;
+    j := max+1;
+    while i<j do
+    begin
+      repeat
+        i:=i+1;
+      until fTempArr[i]>=mid;
 
-destructor TThIntArrSorter.Destroy;
-Begin
+      repeat
+        j := j - 1;
+      until fTempArr[j] <= mid;
 
-End;    }
+      if i < j then
+      begin
+        tmp:=fTempArr[i];
+        fTempArr[i]:=fTempArr[j];
+        fTempArr[j]:=tmp;
+      end;
+    end;
+
+    QuickSort(a, min, j);
+    QuickSort(a, j+1, max);
+  end;
+end;
+
+//------------------------------ End TThIntArrSorter -------------------------------
+
+
+
+
+
 
 
 procedure TfMain.WMOnWM_MYINFO(var msg: TMessage);                              // Обработчик сообщений из потока
@@ -175,13 +219,14 @@ begin
          // PbShowMessage(msgVal, '');
        End;
 
-    2: // Информация, полученная от потока
+    2: // Информация, полученная от потока ThSort
        Begin
          case msgVal of
 
            1..2 : // Завершился или прервался без аварии
                  Begin
                    fMain.b_FindFile.Enabled      := true;
+                   fMain.cb_MultiThread.Enabled  := true;
                    fMain.b_FindFile.Caption      := 'Сортировать';
 
                  End;
@@ -194,14 +239,24 @@ begin
            4 :   // Одна из функций вернула ошибку
                  Begin
                    fMain.b_FindFile.Enabled      := true;
+                   fMain.cb_MultiThread.Enabled  := true;
                    fMain.b_FindFile.Caption      := 'Сортировать';
                  End;
-
            5 :   Begin
-                  SortInt(  );
+
                  End;
+
          end;
 
+       End;
+
+    // TThIntArrSorter
+    3: Begin
+         case msgVal of
+           1: Begin
+
+              End;
+         end;
        End;
   end;
 
@@ -209,32 +264,13 @@ End;
 
 
 
-Function TfMain.SortInt(  ) : boolean;
-var
-  I: Integer;
-  ThSortWorker : array of TThIntArrSorter;
-begin
-  Result := false;
-
-  SetLength(ThSortWorker, length(GSortedStrZipTable));
-
-  for I := 0 to length(GSortedStrZipTable)-1 do
-  Begin
-    ThSortWorker[i] := TThIntArrSorter.Create(true);
-    ThSortWorker[i].fNoSortArr := GSortedStrZipTable;
-    ThSortWorker[i].priority   := tpLowest;
-    ThSortWorker[i].fIdx       := i;
-    ThSortWorker[i].Resume;
-  End;
-
-end;
-
 
 //++++++++++++++++++++++++++  TThSorter  ++++++++++++++++++++++++++++++++++++
 
 Procedure TThSorter.Execute;                                                    // Execute
 Begin
   try
+    // Создаем файл если его нет (нужны проверки)
     GetFileSize(fOutFilePath);
 
     if CreateMatchArr() then
@@ -257,49 +293,11 @@ Begin
     Synchronize(ShowProgress);
     PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 4 );
   end;
-
-
 End;
 
 
-function CompareStringsAscending(List: TStringList; Index1, Index2: Integer):Integer;
-var
-  str1,
-  str2,
-  fullStr1,
-  fullStr2
-          : String;
-
-  posDot1,
-  posDot2
-          : Integer;
-begin
-   fullStr1 := List[Index1];
-   fullStr2 := List[Index2];
-
-   Result :=  CompareText(fullStr1, fullStr2);
-end;
-
-
-
-
-function TThSorter.GetFileSize( FileName: string): Int64;                       // GetStartFileSize
-var
-  FS: TFilestream;
-begin
-  Result := 0;
-  FS := TFilestream.Create(Filename, fmCreate or fmShareDenyRead);
-  if Result <> -1  then
-    Result := FS.Size;
-  FS.Free;
-end;
-
-
-
-
-
-
-Procedure TThSorter.SaveToTxt( SortArr  : Array of Integer; StrName : String );
+// Сохранение в файл
+Procedure TThSorter.SaveToTxt( SortArr  : Array of Integer; StrName : String ); // SaveToTxt
 var
   i, j : Integer;
   sl   : TStringList;
@@ -326,13 +324,29 @@ Begin
 
 End;
 
+// Кастомная сортировка строк
+function CompareStringsAscending( List: TStringList;
+                                  Index1, Index2: Integer):Integer;
+  var
+    str1,
+    str2,
+    fullStr1,
+    fullStr2
+            : String;
 
+    posDot1,
+    posDot2
+            : Integer;
+  begin
+     fullStr1 := List[Index1];
+     fullStr2 := List[Index2];
 
-
-
+     Result :=  CompareText(fullStr1, fullStr2);
+  end;
 
 
 function TThSorter.Sorting( ArrZipTable  : ZipTable ) : boolean;                // Sorting
+  // Поиск в массиве соответствий по имени
   function FindIdxFromArrMatchByName( ArrMatching : Array of String;
                                         Str : String ) : Integer;
     var
@@ -348,6 +362,7 @@ function TThSorter.Sorting( ArrZipTable  : ZipTable ) : boolean;                
       End;
     End;
 
+    // Сортировка массива
     Procedure SortIntArray ( var NotSortArr : Array of Integer );
     var
       i, j,
@@ -377,8 +392,7 @@ var
   fndIdx
                : Integer;
   sl           : TStringList;
-//  tmpArrInt    : array of Integer;
-
+  ThSortWorker : Array of TThIntArrSorter ;
 Begin
   Result := false;
   sl := TStringList.Create;
@@ -390,10 +404,8 @@ Begin
         sl.Add(GArrMatching[i]);
     End;
 
+    // Сортируем строчные данные
     sl.CustomSort(CompareStringsAscending);
-//    SetLength( ThSortWorker, Length(GArrMatching) );
-
-
 
     for i := 0 to sl.Count-1 do
     Begin
@@ -410,18 +422,19 @@ Begin
         exit;
       End;
 
+      // Рисуем прогрес
       fPbCurPos := Round(i * 100 / (sl.Count-1));
       if fPbCurPos <>  fPbOldPos then
       Begin
         fPbOldPos := fPbCurPos;
-        fMes := 'Сортировка прочитанных данных: ' + IntToStr(fPbCurPos)+'%';
+        fMes := 'Сортировка прочитанных строчных данных: ' + IntToStr(fPbCurPos)+'%';
         Synchronize(ShowProgress);
       End;
 
+      // Находим элемент в массиве соответствия, по имени
       fndIdx := FindIdxFromArrMatchByName( GArrMatching, sl.Strings[i] );
       if fndIdx >= 0 then
       Begin
-
         // Заполняем временный массив
         setLength( GSortedStrZipTable[i], length(ArrZipTable[fndIdx]) );
         for j := 0 to length(ArrZipTable[fndIdx]) -1 do
@@ -429,18 +442,82 @@ Begin
           GSortedStrZipTable[i][j] := ArrZipTable[fndIdx][j];
         end;
 
+        // Если делать последовательно, без многопоточности
         if not fMultiTh then
         Begin
+
+          // Сортируем Number часть
           SortIntArray( GSortedStrZipTable[i] );
+
+          // Сохраняем в файл
           SaveToTxt( GSortedStrZipTable[i], sl.Strings[i] );
         End;
-
       End;
     End;
 
+    // Многопоточный вариант
     if fMultiTh then
     Begin
-      PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 5 );
+
+      // Выполняем сортировку в разных потоках
+      SetLength(ThSortWorker, length(GSortedStrZipTable));
+
+      for i := 0 to length(GSortedStrZipTable)-1 do
+      Begin
+        ThSortWorker[i]            := TThIntArrSorter.Create(true);
+        ThSortWorker[i].fNoSortArr := GSortedStrZipTable;
+        ThSortWorker[i].priority   := tpLowest;
+        ThSortWorker[i].fIdx       := i;
+
+        // Рисуем прогрес
+        fPbCurPos := Round(i * 100 / (length(GSortedStrZipTable)));
+        if fPbCurPos <>  fPbOldPos then
+        Begin
+          fPbOldPos := fPbCurPos;
+          fMes := 'Запускаем сортировку чисел: ' + IntToStr(fPbCurPos)+'%';
+          Synchronize(ShowProgress);
+        End;
+
+        // Меняем переменную счетчик рабочих - потокобезопасно
+        CS.Enter;
+        try
+          GWorkerCnt  := GWorkerCnt + 1;
+        finally
+          CS.Leave;
+        end;
+
+        ThSortWorker[i].Resume;
+      End;
+
+      // Таймер проверки, завершения работы потоков
+      while True do
+      Begin
+        sleep(1000);
+        CS.Enter;
+        try
+          if GWorkerCnt = 0 then
+            break;
+        finally
+          CS.Leave;
+        end;
+      end;
+
+      for i := 0 to sl.Count-1 do
+      Begin
+
+        // Рисуем прогрес
+        fPbCurPos := Round(i * 100 / ( sl.Count ));
+        if fPbCurPos <>  fPbOldPos then
+        Begin
+          fPbOldPos := fPbCurPos;
+          fMes := 'Записываем результат: ' + IntToStr(fPbCurPos)+'%';
+          Synchronize(ShowProgress);
+        End;
+
+        // Сохраняем в файл
+        SaveToTxt( GSortedStrZipTable[i], sl.Strings[i] );
+      End;
+
     End;
 
     Result := true;
@@ -452,7 +529,7 @@ End;
 
 
 
-function TThSorter.CreateMatchArr() : boolean;
+function TThSorter.CreateMatchArr() : boolean;                                  // CreateMatchArr()
 var
   i, j,
   found13,
@@ -471,6 +548,7 @@ var
   buf         : array [0..1024] of byte;
   str, num    : AnsiString;
 
+  // Уникальность элемента
   function CheckIsArrElUnic( Str : String; Arr : Array of String ): integer;
   var
     i, j : Integer;
@@ -501,14 +579,17 @@ begin
     arrMachInx   := 0;
     maxFsSize    := fs.Size;
 
+    // Читаем из файла порциями по 1025 байт
     while readEnd < maxFsSize do
     Begin
+
+      // Ждем отмены от пользователя
       If Terminated then
       Begin
         fPbCurPos := 0;
         fMes := 'Операция прервана!';
         Synchronize(ShowProgress);
-        // Сообщение - Операция прервана
+        // Сообщение в главную форму - Операция прервана
         PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 2 );
         exit;
       End;
@@ -517,7 +598,7 @@ begin
       if readEnd > readStart then
         readStart := readEnd;
 
-
+      // Рисуем прогрес
       fPbCurPos := Round(readEnd * 100 / maxFsSize);
       if fPbCurPos <>  fPbOldPos then
       Begin
@@ -541,38 +622,41 @@ begin
         found13     := -1;
         SetLength(str , 0);
 
+        // Заполняем массив соответствий, найденными словами
         for j := 0 to readed do
         begin
+          // Работаем со строками
           if buf[j] = ord(#13) then
           Begin
             bintoAscii( buf, found13+1, j-1, str, num);
+
+            // Проверяем уникальность
             fndPosit := CheckIsArrElUnic(str, GArrMatching);
             case fndPosit of
-            -1 : Begin
+              // Ошибка
+              -1 : Begin
 
-                 End;
-            -2 : Begin
-                  GArrMatching[arrMachInx] := str;
-                  SetLength( fArrZipTable[arrMachInx], 1 );
-                  fArrZipTable[arrMachInx][0] := StrToInt( copy(num, 1, pos('.',num)-1 ));
-                  inc(arrMachInx);
-                 End
-            else
-                Begin
-                  SetLength( fArrZipTable[fndPosit], length(fArrZipTable[fndPosit])+1 );
-
-                  fArrZipTable[fndPosit][length(fArrZipTable[fndPosit])-1] := StrToInt( copy(num, 1, pos('.',num)-1 ));
-                End;
+                   End;
+              // Уникальная строка, будет первым элементом в fArrZipTable
+              -2 : Begin
+                    GArrMatching[arrMachInx] := str;
+                    SetLength( fArrZipTable[arrMachInx], 1 );
+                    fArrZipTable[arrMachInx][0] := StrToInt( copy(num, 1, pos('.',num)-1 ));
+                    inc(arrMachInx);
+                   End
+              else
+                  // Не уникальная строка, добавляем к динамическому массиву в fArrZipTable
+                  Begin
+                    SetLength( fArrZipTable[fndPosit], length(fArrZipTable[fndPosit])+1 );
+                    fArrZipTable[fndPosit][length(fArrZipTable[fndPosit])-1] := StrToInt( copy(num, 1, pos('.',num)-1 ));
+                  End;
             end;
-
-
             found13 := j+1;
           End;
         end;
       End;
       readEnd := readEnd + found13;
     End;
-
 
   finally
     FS.Free;
@@ -593,7 +677,6 @@ End;
 
 destructor TThSorter.Destroy;
 Begin
-
   // Сообщение - Можно освободить, поток закончил свой путь
   PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 3 );
 End;
@@ -608,7 +691,21 @@ Begin
   fMain.l_PbInfo.caption := fMes;
 End;
 
-Procedure TThSorter.BinToAscii(const Bin: array of Byte; FrStart, FrEnd : Integer; var Str, Number : AnsiString);
+
+function TThSorter.GetFileSize( FileName: string): Int64;                       // GetStartFileSize
+var
+  FS: TFilestream;
+begin
+  Result := 0;
+  FS := TFilestream.Create(Filename, fmCreate or fmShareDenyRead);
+  if Result <> -1  then
+    Result := FS.Size;
+  FS.Free;
+end;
+
+Procedure TThSorter.BinToAscii( const Bin: array of Byte;                       // BinToAscii
+                                FrStart, FrEnd : Integer;
+                                var Str, Number : AnsiString);
 var
   i, j, n   : integer;
   dotFound  : boolean;
@@ -647,39 +744,10 @@ begin
 
 end;
 
-function TThSorter.GetStartFileSize( FileName: string): Int64;                  // GetStartFileSize - Определяем размер файла
-var
-  FS: TFilestream;
-begin
-  Result := 0;
-  try
-      FS := TFilestream.Create(Filename, fmOpenRead or fmShareDenyRead);
-  except
-    Result := -1;
-  end;
-  if Result <> -1  then
-    Result := FS.Size;
-  FS.Free;
-end;
-
-function TThSorter.MakeMemSize(Size: Int64): String;                            // MakeMemSize - Человекочитаемый формат размера файла
-const
-  kb = 1024;
-  mb = kb*kb;
-  gb = mb*kb;
-begin
-  case Size of
-    0 ..kb-1: Result:=IntToStr(size)+' b';
-    kb..mb-1: Result:=Format('%.2f Kb',[Size/kb]);
-    mb..gb-1: Result:=Format('%.2f Mb',[Size/mb]);
-  else
-    Result:=Format('%.2f Gb',[Size/gb]);
-  end;
-end;
-
-
-
 //++++++++++++++++++++++++++++++ End TThSorter +++++++++++++++++++++++++++++++++
+
+
+
 
 
 
@@ -697,11 +765,11 @@ begin
 
    if od_InputFile.Execute then
    Begin
-     inFilePath               := od_InputFile.FileName;
-     fMain.l_FilePath.caption := 'Файл: ' + inFilePath;
+     inFilePath                    := od_InputFile.FileName;
+     fMain.l_FilePath.caption      := 'Файл: ' + inFilePath;
 
-     // Проверяем есть ли наш формат внутри
-     fMain.b_FindFile.Caption := 'Сортировать';
+     fMain.b_FindFile.Caption      := 'Сортировать';
+     fMain.cb_MultiThread.visible  := true;
    End;
  end
 
@@ -711,6 +779,7 @@ begin
  begin
     // Разблокируется при завершении потока - WMOnWM_MYINFO
     fMain.b_FindFile.Caption      := 'Прервать';
+    fMain.cb_MultiThread.Enabled  := false;
     fMain.pb_Main.Visible         := true;
 
     if not Assigned(thSort) then
@@ -720,7 +789,9 @@ begin
         // Передаем параметры в поток
         thSort.AInFilePath  := inFilePath;
         thSort.AOutFilePath := workDir + '\sorted.txt';
-        thSort.AMultiTh := true;
+
+        if cb_MultiThread.Checked then
+          thSort.AMultiTh := true;
 
       finally
         thSort.Resume;
@@ -745,16 +816,11 @@ end;
 
 
 
-
-
-
-
-
-
-
 procedure TfMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-if Assigned(thSort) then
+  CS.Free;
+
+  if Assigned(thSort) then
   Begin
     // Сигнализируем потоку о завершении.
     thSort.Terminate;
@@ -763,13 +829,16 @@ if Assigned(thSort) then
   End;
 end;
 
+
 procedure TfMain.FormCreate(Sender: TObject);                                   // FormCreate
 begin
+  CS         := TCriticalSection.Create;
+  GWorkerCnt := 0;
   // Размеры формы при resize
   with Constraints do
   Begin
-        MaxHeight := 140;
-        MinHeight := 140;
+        MaxHeight := 160;
+        MinHeight := 160;
         MinWidth  := 550;
   End;
 
@@ -815,226 +884,6 @@ begin
   End;
 end;
 
-procedure TfMain.l_FilePathClick(Sender: TObject);
-begin
-  beep();
-end;
-
 end.
 
-//function CompareStringsAscending(List: TStringList; Index1, Index2: Integer):Integer;
-//var
-//  str1,
-//  str2,
-//  fullStr1,
-//  fullStr2
-//          : String;
-//
-//  posDot1,
-//  posDot2
-//          : Integer;
-//begin
-//   fullStr1 := List[Index1];
-//   fullStr2 := List[Index2];
-//
-//   posDot1 := pos('.', fullStr1);
-//   posDot2 := pos('.', fullStr2);
-//
-//   if ( posDot1 <> 0 ) and ( posDot2 <> 0 ) then
-//   Begin
-//     str1 := copy(fullStr1, posDot1+1, length(fullStr1)-posDot1+1);
-//     str2 := copy(fullStr2, posDot2+1, length(fullStr2)-posDot2+1);
-//
-//     Result :=  CompareText(str1, str2);
-//
-//   End;
-//
-//end;
-//
-//function checkInt( S : string) : integer;
-//var
-//   errorPos, I : Integer;
-//begin
-//  Val(S, I, errorPos);
-//  if errorPos = 0 then
-//  result := i
-//  else
-//  result := -1;
-//end;
 
-//function CompareIntsAscending(List: TStringList; Index1, Index2: Integer):Integer;
-//var
-//  fullStr1,
-//  fullStr2,
-//  str1,
-//  str2
-//          : String;
-//
-//  posDot1,
-//  posDot2,
-//  d1,
-//  d2
-//          : Integer;
-//begin
-//   fullStr1 := List[Index1];
-//   fullStr2 := List[Index2];
-//
-//   posDot1 := pos('.', fullStr1);
-//   posDot2 := pos('.', fullStr2);
-//
-//
-//   if ( posDot1 <> 0 ) and ( posDot2 <> 0 ) then
-//   Begin
-//     d1 := checkInt( copy(fullStr1, 1, posDot1-1) );
-//     d2 := checkInt( copy(fullStr2, 1, posDot2-1) );
-//
-//     str1 := copy(fullStr1, posDot1+1, length(fullStr1)-posDot1+1);
-//     str2 := copy(fullStr2, posDot2+1, length(fullStr2)-posDot2+1);
-//
-//     if ( d1 < d2 ) and ( str1 = str2 ) then
-//       Result := -1
-//     else if ( d1 > d2 ) and ( str1 = str2 ) then
-//       Result := 1
-//     else
-//       Result := 0;
-//   End;
-//
-//end;
-//
-//Procedure SortCompaireInt( List: TStringList; segmentStart, segmentEnd : Integer );
-//var
-//  i, j,
-//  d1, d2,
-//  posDot1,
-//  posDot2
-//            : Integer;
-//
-//  fullStr1,
-//  fullStr2,
-//  strTemp
-//            : String;
-//Begin
-//  for I := segmentStart to segmentEnd do
-//  begin
-//    fullStr1 := List[i];
-//    posDot1  := pos('.', fullStr1);
-//    d1       := checkInt( copy(fullStr1, 1, posDot1-1) );
-//
-//    for j := i + 1 to segmentEnd do
-//    Begin
-//      fullStr1  := List[i];
-//      posDot1   := pos('.', fullStr1);
-//      d1        := checkInt( copy(fullStr1, 1, posDot1-1) );
-//
-//      fullStr2  := List[j];
-//      posDot2   := pos('.', fullStr2);
-//
-//      d2 := checkInt( copy(fullStr2, 1, posDot2-1) );
-//
-//      if ( d1 > d2 ) then
-//      Begin
-//         strTemp   := List[i];
-//         List[i]   := List[j];
-//         List[j]   := strTemp;
-//      End;
-//    End;
-//  end;
-//
-//
-//
-//End;
-//
-//Procedure TfMain.SortByInt( List: TStringList );
-//var
-//  i, j, k,
-//  posDot1,
-//  posDot2,
-//  d1, d2,
-//  segmentStart,
-//  segmentEnd
-//              : Integer;
-//
-//  fullStr1,
-//  fullStr2,
-//  str1,
-//  str2,
-//  strTemp
-//              : String;
-//Begin
-//  segmentStart := 0;
-//  for i := 0 to List.count-1 do
-//  Begin
-//    if i < segmentStart then
-//      continue;
-//    fullStr1 := List[i];
-//    posDot1  := pos('.', fullStr1);
-//    str1     := copy(fullStr1, posDot1+1, length(fullStr1)-posDot1+1);
-//    d1       := checkInt( copy(fullStr1, 1, posDot1-1) );
-//
-//    for j := i+1 to List.count-1 do
-//    Begin
-//      fullStr2  := List[j];
-//      posDot2   := pos('.', fullStr2);
-//      str2      := copy(fullStr2, posDot2+1, length(fullStr2)-posDot2+1);
-//
-//      // Конец отсортированных значений
-//      if ( str1 <> str2 ) or ( j = List.count-1 ) then
-//      Begin
-//        segmentEnd := j - 1;
-//        if j = List.count-1 then
-//           segmentEnd := List.count-1;
-//        SortCompaireInt( List, segmentStart, segmentEnd );
-//        segmentStart := segmentEnd + 1;
-//
-//        break;
-//      End;
-//    End;
-//  End;
-//End;
-
-
-
-//Procedure TThSorter.SortArrZipByNumber( ArrZipTable  : ZipTable );
-//var
-//  I, j, k, tmpVal : Integer;
-//Begin
-//  for i := 0 to Length(ArrZipTable)-1 do
-//  Begin
-//    j := 0;
-//    while j <= Length(ArrZipTable[i])-1 do
-//    Begin
-//      k := j + 1;
-//      while k <= Length(ArrZipTable[i])-1 do
-//      Begin
-//        if ArrZipTable[i][j] > ArrZipTable[i][k] then
-//        Begin
-//           tmpVal               := ArrZipTable[i][j];
-//           ArrZipTable[i][j]    := ArrZipTable[i][k];
-//           ArrZipTable[i][k]    := tmpVal;
-//        End;
-//
-//        inc(k);
-//      End;
-//      inc(j);
-//    End;
-//
-//  End;
-//
-//End;
-
-
-
-
-
-
-
-//function checkInt( S : string) : integer;
-//var
-//   errorPos, I : Integer;
-//begin
-//  Val(S, I, errorPos);
-//  if errorPos = 0 then
-//  result := i
-//  else
-//  result := -1;
-//end;

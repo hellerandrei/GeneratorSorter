@@ -2,7 +2,7 @@ object fMain: TfMain
   Left = 182
   Top = 124
   Caption = #1057#1086#1088#1090#1080#1088#1086#1074#1097#1080#1082
-  ClientHeight = 391
+  ClientHeight = 113
   ClientWidth = 1506
   Color = clBtnFace
   Font.Charset = RUSSIAN_CHARSET
@@ -18,7 +18,7 @@ object fMain: TfMain
   TextHeight = 18
   object sb_Main: TStatusBar
     Left = 0
-    Top = 372
+    Top = 94
     Width = 1506
     Height = 19
     Panels = <
@@ -50,7 +50,6 @@ object fMain: TfMain
       Font.Name = 'Arial'
       Font.Style = []
       ParentFont = False
-      OnClick = l_FilePathClick
     end
     object Panel2: TPanel
       Left = 1367
@@ -62,7 +61,7 @@ object fMain: TfMain
       TabOrder = 0
       object b_FindFile: TButton
         Left = 0
-        Top = 20
+        Top = 15
         Width = 129
         Height = 29
         Caption = #1042#1099#1073#1088#1072#1090#1100
@@ -70,6 +69,17 @@ object fMain: TfMain
         OnClick = b_FindFileClick
       end
     end
+  end
+  object cb_MultiThread: TCheckBox
+    Left = 23
+    Top = 63
+    Width = 298
+    Height = 17
+    Caption = #1057#1086#1088#1090#1080#1088#1086#1074#1072#1090#1100' '#1084#1085#1086#1075#1086#1087#1086#1090#1086#1095#1085#1086
+    Checked = True
+    State = cbChecked
+    TabOrder = 2
+    Visible = False
   end
   object od_InputFile: TOpenDialog
     Left = 192
