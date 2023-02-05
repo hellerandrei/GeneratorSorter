@@ -135,12 +135,10 @@ Begin
 
     // Сортируем массив
     QuickSort(fTempArr, 0, length(fTempArr)-1);
-
     for i := 0 to Length(fNoSortArr[fIdx]) -1 do
     Begin
       fNoSortArr[fIdx][i] := fTempArr[i];
     End;
-
     setLength(fTempArr, 0);
 
   finally
@@ -148,15 +146,10 @@ Begin
     CS.Enter;
     try
       GWorkerCnt := GWorkerCnt - 1;
-
     finally
       CS.Leave;
     end;
   end;
-
-
-
-
 End;
 
 // Сортировка массива Integer
