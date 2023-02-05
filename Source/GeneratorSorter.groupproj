@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{BF490D5B-7EC4-4EBA-9BF7-83DBC9C782CD}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Generator\Generator.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Sorter\Sorter.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Generator">
+        <MSBuild Projects="Generator\Generator.dproj"/>
+    </Target>
+    <Target Name="Generator:Clean">
+        <MSBuild Projects="Generator\Generator.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Generator:Make">
+        <MSBuild Projects="Generator\Generator.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Sorter">
+        <MSBuild Projects="Sorter\Sorter.dproj"/>
+    </Target>
+    <Target Name="Sorter:Clean">
+        <MSBuild Projects="Sorter\Sorter.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Sorter:Make">
+        <MSBuild Projects="Sorter\Sorter.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Generator;Sorter"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Generator:Clean;Sorter:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Generator:Make;Sorter:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
