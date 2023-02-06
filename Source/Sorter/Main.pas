@@ -499,7 +499,7 @@ Begin
 End;
 
 
-// We collect data, fill in dictionaries, arrays of correspondences
+// We collect data, fill in dictionaries, arrays of matching values
 function TThSorter.CreateMatchArr() : boolean;                                  // CreateMatchArr()
 var
   i, j,
