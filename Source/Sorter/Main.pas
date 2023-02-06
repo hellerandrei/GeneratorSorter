@@ -1,4 +1,4 @@
-﻿unit Main;
+unit Main;
 
 interface
 
@@ -34,21 +34,22 @@ type
 //..............................................................................
 
 
+
 //................................ TThSorter ...................................
 
   TThSorter = class(TThread)
   private
-    fMes,                                                                       // Сообщение  для прогресбара
-    fInFilePath,                                                                // Исходный файл
-    fOutFilePath                                                                // Результирующий файл
+    fMes,                                                                       // Message for the progress bar
+    fInFilePath,                                                                // Source file
+    fOutFilePath                                                                // The resulting file
                  : String;
 
-    fPbCurPos, fPbOldPos                                                        // Переменные для прогресбара
+    fPbCurPos, fPbOldPos                                                        // Variables for progresbar
                  : Int64;
 
-    fMultiTh     : Boolean;                                                     // Многопоточно или последовательно, разница во времени
+    fMultiTh     : Boolean;                                                     // Multithreaded or sequential, time difference
 
-    fArrRndDict  : TStringList;                                                 // Контейнер для сгенерированных данных
+    fArrRndDict  : TStringList;                                                 // Container for generated data
 
     fArrZipTable  : ZipTable;
 
@@ -61,19 +62,20 @@ type
     Procedure SaveToTxt( SortArr  : Array of Integer; StrName : String );
   public
 
-    property AInFilePath   : String   write fInFilePath;                        // Передача параметров в поток
+    property AInFilePath   : String   write fInFilePath;
     property AOutFilePath  : String   write fOutFilePath;
     property AMultiTh      : Boolean  write fMultiTh;
 
-    Procedure ShowProgress;                                                     // Функция синхронизации с интерфейсом главного окна
+    Procedure ShowProgress;                                                     // Synchronization function with the main window interface
 
     constructor Create();
     destructor Destroy; override ;
   protected
     procedure Execute; override;
   end;
-
 //..............................................................................
+
+
 
   TfMain = class(TForm)
     od_InputFile: TOpenDialog;
@@ -88,10 +90,10 @@ type
     procedure FormResize(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    procedure WMOnWM_MYINFO(var msg: TMessage); message WM_MY_SORT_INFO;        // Обработка сообщений из потоков
+    procedure WMOnWM_MYINFO(var msg: TMessage); message WM_MY_SORT_INFO;        // Processing messages from streams
   public
     workDir,
-    inFilePath                                                                  // Исходный файл
+    inFilePath                                                                  // Source file
                    : String;
 
     pb_Main        : TProgressBar;
@@ -109,7 +111,7 @@ var
 
   GArrMatching        : Array [0..500] of  String;
   GSortedStrZipTable  : ZipTable;
-  GWorkerCnt                                                                  // Счетчик работающих потоков
+  GWorkerCnt                                                                    // Counter of running threads
                       : Integer;
 
 implementation
@@ -133,7 +135,7 @@ Begin
       fTempArr[i] := fNoSortArr[fIdx][i];
     End;
 
-    // Сортируем массив
+    // Sorting the array
     QuickSort(fTempArr, 0, length(fTempArr)-1);
     for i := 0 to Length(fNoSortArr[fIdx]) -1 do
     Begin
@@ -142,7 +144,7 @@ Begin
     setLength(fTempArr, 0);
 
   finally
-    // Сотировка завершена
+    // Sorting is complete
     CS.Enter;
     try
       GWorkerCnt := GWorkerCnt - 1;
@@ -152,7 +154,7 @@ Begin
   end;
 End;
 
-// Сортировка массива Integer
+// Sorting an Integer array
 procedure TThIntArrSorter.QuickSort( var a: array of integer; min, max: Integer);
 Var
   i,j,
@@ -196,7 +198,7 @@ end;
 
 
 
-procedure TfMain.WMOnWM_MYINFO(var msg: TMessage);                              // Обработчик сообщений из потока
+procedure TfMain.WMOnWM_MYINFO(var msg: TMessage);                              // Message handler from the stream
 var
   msgType,
   msgVal
@@ -207,33 +209,33 @@ begin
 
   case msgType of
 
-    1: // Вариант передвижения прогрес бара
+    1: // The option of moving the progres bar
        Begin
          // PbShowMessage(msgVal, '');
        End;
 
-    2: // Информация, полученная от потока ThSort
+    2: // Information received from the ThSort stream
        Begin
          case msgVal of
 
-           1..2 : // Завершился или прервался без аварии
+           1..2 : // Completed or interrupted without an accident
                  Begin
                    fMain.b_FindFile.Enabled      := true;
                    fMain.cb_MultiThread.Enabled  := true;
-                   fMain.b_FindFile.Caption      := 'Сортировать';
+                   fMain.b_FindFile.Caption      := 'Sort';
 
                  End;
 
-           3 :   // Поток разрушен в деструкторе
+           3 :   // The thread is destroyed in the destructor
                  Begin
                    thSort := nil;
                  End;
 
-           4 :   // Одна из функций вернула ошибку
+           4 :   // One of the functions returned an error
                  Begin
                    fMain.b_FindFile.Enabled      := true;
                    fMain.cb_MultiThread.Enabled  := true;
-                   fMain.b_FindFile.Caption      := 'Сортировать';
+                   fMain.b_FindFile.Caption      := 'Sort';
                  End;
            5 :   Begin
 
@@ -263,16 +265,16 @@ End;
 Procedure TThSorter.Execute;                                                    // Execute
 Begin
   try
-    // Создаем файл если его нет (нужны проверки)
+    // Create a file if it is not there (checks are needed)
     GetFileSize(fOutFilePath);
 
     if CreateMatchArr() then
     Begin
       if Sorting (fArrZipTable) then
       Begin
-        // Сообщение - Операция завершена
+        // Message - Operation completed
         fPbCurPos := 0;
-        fMes      := 'Операция выполнена! - Файл находится -> ' + fOutFilePath;
+        fMes      := 'The operation is completed! - The file is located ->' + fOutFilePath;
         Synchronize(ShowProgress);
         PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 1 );
         exit;
@@ -280,16 +282,16 @@ Begin
     End;
 
   except
-    // Сообщение - Операция не завершена
+    // Message - Operation not completed
     fPbCurPos := 0;
-    fMes      := 'Операция не выполнена!';
+    fMes      := 'Operation failed!';
     Synchronize(ShowProgress);
     PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 4 );
   end;
 End;
 
 
-// Сохранение в файл
+// Saving to a file
 Procedure TThSorter.SaveToTxt( SortArr  : Array of Integer; StrName : String ); // SaveToTxt
 var
   i, j : Integer;
@@ -317,7 +319,7 @@ Begin
 
 End;
 
-// Кастомная сортировка строк
+// Custom sorting of strings
 function CompareStringsAscending( List: TStringList;
                                   Index1, Index2: Integer):Integer;
   var
@@ -339,7 +341,7 @@ function CompareStringsAscending( List: TStringList;
 
 
 function TThSorter.Sorting( ArrZipTable  : ZipTable ) : boolean;                // Sorting
-  // Поиск в массиве соответствий по имени
+  // Search in the array of matches by name
   function FindIdxFromArrMatchByName( ArrMatching : Array of String;
                                         Str : String ) : Integer;
     var
@@ -355,7 +357,7 @@ function TThSorter.Sorting( ArrZipTable  : ZipTable ) : boolean;                
       End;
     End;
 
-    // Сортировка массива
+    // Sorting an array
     Procedure SortIntArray ( var NotSortArr : Array of Integer );
     var
       i, j,
@@ -397,7 +399,7 @@ Begin
         sl.Add(GArrMatching[i]);
     End;
 
-    // Сортируем строчные данные
+    // Sorting string data
     sl.CustomSort(CompareStringsAscending);
 
     for i := 0 to sl.Count-1 do
@@ -408,51 +410,51 @@ Begin
       If Terminated then
       Begin
         fPbCurPos := 0;
-        fMes := 'Операция прервана!';
+        fMes := 'Operation aborted!';
         Synchronize(ShowProgress);
-        // Сообщение - Операция прервана
+        // Message - Operation aborted
         PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 2 );
         exit;
       End;
 
-      // Рисуем прогрес
+      // Drawing progres
       fPbCurPos := Round(i * 100 / (sl.Count-1));
       if fPbCurPos <>  fPbOldPos then
       Begin
         fPbOldPos := fPbCurPos;
-        fMes := 'Сортировка прочитанных строчных данных: ' + IntToStr(fPbCurPos)+'%';
+        fMes := 'Sorting of read lowercase data: ' + IntToStr(fPbCurPos)+'%';
         Synchronize(ShowProgress);
       End;
 
-      // Находим элемент в массиве соответствия, по имени
+      // We find an element in the matching array, by name
       fndIdx := FindIdxFromArrMatchByName( GArrMatching, sl.Strings[i] );
       if fndIdx >= 0 then
       Begin
-        // Заполняем временный массив
+        // Filling in a temporary array
         setLength( GSortedStrZipTable[i], length(ArrZipTable[fndIdx]) );
         for j := 0 to length(ArrZipTable[fndIdx]) -1 do
         begin
           GSortedStrZipTable[i][j] := ArrZipTable[fndIdx][j];
         end;
 
-        // Если делать последовательно, без многопоточности
+        // If done sequentially, without multithreading
         if not fMultiTh then
         Begin
 
-          // Сортируем Number часть
+          // Sorting the Number part
           SortIntArray( GSortedStrZipTable[i] );
 
-          // Сохраняем в файл
+          // Save to a file
           SaveToTxt( GSortedStrZipTable[i], sl.Strings[i] );
         End;
       End;
     End;
 
-    // Многопоточный вариант
+    // Multithreaded version
     if fMultiTh then
     Begin
 
-      // Выполняем сортировку в разных потоках
+      // We perform sorting in different threads
       SetLength(ThSortWorker, length(GSortedStrZipTable));
 
       for i := 0 to length(GSortedStrZipTable)-1 do
@@ -462,16 +464,16 @@ Begin
         ThSortWorker[i].priority   := tpLowest;
         ThSortWorker[i].fIdx       := i;
 
-        // Рисуем прогрес
+        // Drawing progres
         fPbCurPos := Round(i * 100 / (length(GSortedStrZipTable)));
         if fPbCurPos <>  fPbOldPos then
         Begin
           fPbOldPos := fPbCurPos;
-          fMes := 'Запускаем сортировку чисел: ' + IntToStr(fPbCurPos)+'%';
+          fMes := 'Starting the sorting of numbers: ' + IntToStr(fPbCurPos)+'%';
           Synchronize(ShowProgress);
         End;
 
-        // Меняем переменную счетчик рабочих - потокобезопасно
+        // Changing the worker counter variable is thread-safe
         CS.Enter;
         try
           GWorkerCnt  := GWorkerCnt + 1;
@@ -482,7 +484,7 @@ Begin
         ThSortWorker[i].Resume;
       End;
 
-      // Таймер проверки, завершения работы потоков
+      // Timer for checking, shutting down threads
       while True do
       Begin
         sleep(1000);
@@ -498,16 +500,16 @@ Begin
       for i := 0 to sl.Count-1 do
       Begin
 
-        // Рисуем прогрес
+        // Drawing progres
         fPbCurPos := Round(i * 100 / ( sl.Count ));
         if fPbCurPos <>  fPbOldPos then
         Begin
           fPbOldPos := fPbCurPos;
-          fMes := 'Записываем результат: ' + IntToStr(fPbCurPos)+'%';
+          fMes := 'Recording the result: ' + IntToStr(fPbCurPos)+'%';
           Synchronize(ShowProgress);
         End;
 
-        // Сохраняем в файл
+        // Save to a file
         SaveToTxt( GSortedStrZipTable[i], sl.Strings[i] );
       End;
 
@@ -541,7 +543,7 @@ var
   buf         : array [0..1024] of byte;
   str, num    : AnsiString;
 
-  // Уникальность элемента
+  // Uniqueness of the element
   function CheckIsArrElUnic( Str : String; Arr : Array of String ): integer;
   var
     i, j : Integer;
@@ -572,17 +574,17 @@ begin
     arrMachInx   := 0;
     maxFsSize    := fs.Size;
 
-    // Читаем из файла порциями по 1025 байт
+    // We read from the file in portions
     while readEnd < maxFsSize do
     Begin
 
-      // Ждем отмены от пользователя
+      // Cancellation from the user
       If Terminated then
       Begin
         fPbCurPos := 0;
-        fMes := 'Операция прервана!';
+        fMes := 'Operation aborted!';
         Synchronize(ShowProgress);
-        // Сообщение в главную форму - Операция прервана
+        // Message to the main form - Operation aborted
         PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 2 );
         exit;
       End;
@@ -591,19 +593,19 @@ begin
       if readEnd > readStart then
         readStart := readEnd;
 
-      // Рисуем прогрес
+      // Drawing progres
       fPbCurPos := Round(readEnd * 100 / maxFsSize);
       if fPbCurPos <>  fPbOldPos then
       Begin
         fPbOldPos := fPbCurPos;
-        fMes := 'Анализ структуры файала: ' + IntToStr(fPbCurPos)+'%';
+        fMes := 'Analysis of the file structure: ' + IntToStr(fPbCurPos)+'%';
         Synchronize(ShowProgress);
       End;
 
       fs.Seek(readStart, soBeginning);
       readed := fs.Read( buf, length(buf)-1 );
 
-      // Ищем окончание текстового блока с учетом перевода каретки
+      // We are looking for the end of the text block
       if readed > 0 then
       Begin
         if readed < 2 then
@@ -615,22 +617,22 @@ begin
         found13     := -1;
         SetLength(str , 0);
 
-        // Заполняем массив соответствий, найденными словами
+        // We fill the array of correspondences with the found words
         for j := 0 to readed do
         begin
-          // Работаем со строками
+          // Working with strings
           if buf[j] = ord(#13) then
           Begin
             bintoAscii( buf, found13+1, j-1, str, num);
 
-            // Проверяем уникальность
+            // Checking the uniqueness
             fndPosit := CheckIsArrElUnic(str, GArrMatching);
             case fndPosit of
-              // Ошибка
+              // Mistake
               -1 : Begin
 
                    End;
-              // Уникальная строка, будет первым элементом в fArrZipTable
+              // A unique string, will be the first element in the fArrZipTable
               -2 : Begin
                     GArrMatching[arrMachInx] := str;
                     SetLength( fArrZipTable[arrMachInx], 1 );
@@ -638,7 +640,7 @@ begin
                     inc(arrMachInx);
                    End
               else
-                  // Не уникальная строка, добавляем к динамическому массиву в fArrZipTable
+                  // Not a unique string, we add it to the dynamic array in fArrZipTable
                   Begin
                     SetLength( fArrZipTable[fndPosit], length(fArrZipTable[fndPosit])+1 );
                     fArrZipTable[fndPosit][length(fArrZipTable[fndPosit])-1] := StrToInt( copy(num, 1, pos('.',num)-1 ));
@@ -670,7 +672,7 @@ End;
 
 destructor TThSorter.Destroy;
 Begin
-  // Сообщение - Можно освободить, поток закончил свой путь
+  // Message - Can be released, the thread has finished its journey
   PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 3 );
 End;
 
@@ -678,7 +680,7 @@ End;
 
 
 
-Procedure TThSorter.ShowProgress;                                               // ShowProgress - Работа с интерфейсом главной формы
+Procedure TThSorter.ShowProgress;                                               // ShowProgress - Working with the interface of the main form
 Begin
   fMain.pb_Main.Position := fPbCurPos;
   fMain.l_PbInfo.caption := fMes;
@@ -751,27 +753,27 @@ end;
 
 procedure TfMain.b_FindFileClick(Sender: TObject);
 begin
- if fMain.b_FindFile.Caption = 'Выбрать' then
+ if fMain.b_FindFile.Caption = 'Choose' then
  begin
    od_InputFile.InitialDir := workDir;
-   od_InputFile.Filter     := 'Текстовые файлы|*.txt';
+   od_InputFile.Filter     := 'Text files|*.txt';
 
    if od_InputFile.Execute then
    Begin
      inFilePath                    := od_InputFile.FileName;
-     fMain.l_FilePath.caption      := 'Файл: ' + inFilePath;
+     fMain.l_FilePath.caption      := 'File: ' + inFilePath;
 
-     fMain.b_FindFile.Caption      := 'Сортировать';
+     fMain.b_FindFile.Caption      := 'Sort';
      fMain.cb_MultiThread.visible  := true;
    End;
  end
 
  else
 
- if fMain.b_FindFile.Caption = 'Сортировать' then
+ if fMain.b_FindFile.Caption = 'Sort' then
  begin
-    // Разблокируется при завершении потока - WMOnWM_MYINFO
-    fMain.b_FindFile.Caption      := 'Прервать';
+    // Unblocks at the end of the stream - WMOnWM_MYINFO
+    fMain.b_FindFile.Caption      := 'Abort';
     fMain.cb_MultiThread.Enabled  := false;
     fMain.pb_Main.Visible         := true;
 
@@ -779,7 +781,7 @@ begin
     Begin
       thSort    := TThSorter.Create();
       try
-        // Передаем параметры в поток
+        // Passing parameters to the stream
         thSort.AInFilePath  := inFilePath;
         thSort.AOutFilePath := workDir + '\sorted.txt';
 
@@ -795,7 +797,7 @@ begin
 
  else
 
- if fMain.b_FindFile.Caption = 'Прервать' then
+ if fMain.b_FindFile.Caption = 'Abort' then
   Begin
     if Assigned(thSort) then
     Begin
@@ -815,7 +817,7 @@ begin
 
   if Assigned(thSort) then
   Begin
-    // Сигнализируем потоку о завершении.
+    // Signals the thread to end.
     thSort.Terminate;
     sleep(500);
     application.ProcessMessages;
@@ -827,7 +829,7 @@ procedure TfMain.FormCreate(Sender: TObject);                                   
 begin
   CS         := TCriticalSection.Create;
   GWorkerCnt := 0;
-  // Размеры формы при resize
+  // Dimensions of the form when resize
   with Constraints do
   Begin
         MaxHeight := 160;
@@ -836,7 +838,7 @@ begin
   End;
 
 
-  // Прогресбар
+  // Progressbar
   pb_Main := TProgressBar.Create(sb_Main);
   with pb_Main do
   begin
@@ -851,7 +853,7 @@ begin
     Smooth      := true;
   end;
 
-  // Надпись на Прогресбаре
+  // The inscription on the ProgressBar
   l_PbInfo := TLabel.Create(pb_Main);
   with l_PbInfo do
   Begin

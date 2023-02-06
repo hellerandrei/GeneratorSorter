@@ -1,7 +1,7 @@
 object fMain: TfMain
   Left = 182
   Top = 124
-  Caption = #1057#1086#1088#1090#1080#1088#1086#1074#1097#1080#1082
+  Caption = 'Sorter'
   ClientHeight = 113
   ClientWidth = 1506
   Color = clBtnFace
@@ -43,7 +43,7 @@ object fMain: TfMain
       Width = 769
       Height = 41
       AutoSize = False
-      Caption = '  '#1055#1086#1078#1072#1083#1091#1081#1089#1090#1072' '#1074#1099#1073#1077#1088#1080#1090#1077' '#1092#1072#1081#1083'...'
+      Caption = 'Please select the file...'
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clWindowText
       Font.Height = -16
@@ -64,7 +64,7 @@ object fMain: TfMain
         Top = 15
         Width = 129
         Height = 29
-        Caption = #1042#1099#1073#1088#1072#1090#1100
+        Caption = 'Choose'
         TabOrder = 0
         OnClick = b_FindFileClick
       end
@@ -75,7 +75,7 @@ object fMain: TfMain
     Top = 63
     Width = 298
     Height = 17
-    Caption = #1057#1086#1088#1090#1080#1088#1086#1074#1072#1090#1100' '#1084#1085#1086#1075#1086#1087#1086#1090#1086#1095#1085#1086
+    Caption = 'Multithreaded sort'
     Checked = True
     State = cbChecked
     TabOrder = 2
