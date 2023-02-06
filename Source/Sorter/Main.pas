@@ -499,7 +499,7 @@ Begin
 End;
 
 
-// Собираем данные, заполняем словари, массивы соответствий
+// We collect data, fill in dictionaries, arrays of correspondences
 function TThSorter.CreateMatchArr() : boolean;                                  // CreateMatchArr()
 var
   i, j,
