@@ -169,11 +169,7 @@ Begin
     QuickSort(a, j+1, max);
   end;
 end;
-
-//------------------------------ End TThIntArrSorter -------------------------------
-
-
-
+//------------------------------ End TThIntArrSorter ---------------------------
 
 
 
@@ -239,7 +235,6 @@ begin
          end;
        End;
   end;
-
 End;
 
 
@@ -426,10 +421,8 @@ Begin
         // If done sequentially, without multithreading
         if not fMultiTh then
         Begin
-
           // Sorting the Number part
           SortIntArray( TempIntRow[i] );
-
           // Save to a file
           SaveToTxt( TempIntRow[i], sl.Strings[i] );
         End;
@@ -492,7 +485,6 @@ Begin
 
       for i := 0 to sl.Count-1 do
       Begin
-
         // Drawing progres
         fPbCurPos := Round(i * 100 / ( sl.Count ));
         if fPbCurPos <>  fPbOldPos then
@@ -509,14 +501,13 @@ Begin
     End;
 
     Result := true;
-
   finally
     sl.Free;
   end;
 End;
 
 
-
+// Собираем данные, заполняем словари, массивы соответствий
 function TThSorter.CreateMatchArr() : boolean;                                  // CreateMatchArr()
 var
   i, j,
@@ -648,12 +639,7 @@ begin
   finally
     FS.Free;
   end;
-
 End;
-
-
-
-
 
 constructor TThSorter.Create();
 Begin
@@ -667,10 +653,6 @@ Begin
   // Message - Can be released, the thread has finished its journey
   PostMessage( fMain.Handle, WM_MY_SORT_INFO, 2, 3 );
 End;
-
-
-
-
 
 Procedure TThSorter.ShowProgress;                                               // ShowProgress - Working with the interface of the main form
 Begin
@@ -730,16 +712,7 @@ begin
   End;
 
 end;
-
 //++++++++++++++++++++++++++++++ End TThSorter +++++++++++++++++++++++++++++++++
-
-
-
-
-
-
-
-
 
 
 
@@ -786,7 +759,6 @@ begin
     end;
 
   end
-
  else
 
  if fMain.b_FindFile.Caption = 'Abort' then
@@ -799,11 +771,7 @@ begin
 
 end;
 
-
-
-
-
-procedure TfMain.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TfMain.FormClose(Sender: TObject; var Action: TCloseAction);          // FormClose
 begin
   CS.Free;
 
@@ -824,9 +792,9 @@ begin
   // Dimensions of the form when resize
   with Constraints do
   Begin
-        MaxHeight := 160;
-        MinHeight := 160;
-        MinWidth  := 550;
+    MaxHeight := 160;
+    MinHeight := 160;
+    MinWidth  := 550;
   End;
 
 
