@@ -1,7 +1,7 @@
 object fMain: TfMain
   Left = 181
   Top = 123
-  Caption = #1043#1077#1085#1077#1088#1072#1090#1086#1088
+  Caption = 'Generator'
   ClientHeight = 101
   ClientWidth = 824
   Color = clBtnFace
@@ -77,7 +77,7 @@ object fMain: TfMain
         Top = 8
         Width = 109
         Height = 33
-        Caption = #1057#1075#1077#1085#1077#1088#1080#1088#1086#1074#1072#1090#1100
+        Caption = 'Generate'
         TabOrder = 0
         OnClick = b_GenerateClick
       end
@@ -603,7 +603,7 @@ object fMain: TfMain
       Top = 48
       Width = 121
       Height = 17
-      Caption = #1055#1077#1088#1077#1079#1072#1087#1080#1089#1072#1090#1100
+      Caption = 'Overwrite'
       Checked = True
       State = cbChecked
       TabOrder = 3
