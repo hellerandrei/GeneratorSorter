@@ -14,15 +14,16 @@ const WM_MY_SORT_INFO = WM_USER + 1;
 
 type
 
-  ArrNoSort        = Array of integer;
+  ArrNoSort        = Array of Integer;
 
 //................................ TThIntArrSorter .............................
 
   TThIntArrSorter = class(TThread)
   private
-    procedure QuickSort( var a: array of integer; min, max: Integer);
+    fIntArr : ArrNoSort;
+    procedure QuickSort( var a: array of integer; min, max: integer);
   public
-    AIntArr : ArrNoSort;
+    property AIntArr : ArrNoSort write fIntArr;
   protected
     procedure Execute; override;
   end;
@@ -48,7 +49,7 @@ type
     Function Sorting(  ) : boolean;
 
     Procedure BinToAscii(const Bin: array of Byte; FrStart, FrEnd : Integer; var Str, Number : AnsiString);
-    Procedure SaveToTxt( SortArr  : Array of Integer; StrName : String );
+    Procedure SaveToTxt( const SortArr  : Array of Integer; const StrName : String );
   public
     property AInFilePath   : String   write fInFilePath;
     property AOutFilePath  : String   write fOutFilePath;
@@ -113,7 +114,7 @@ Procedure TThIntArrSorter.Execute;                                              
 Begin
   try
     // Sorting the array
-    QuickSort(AIntArr, 0, length(AIntArr)-1);
+    QuickSort(fIntArr, 0, length(fIntArr)-1);
 
   finally
     // Sorting is complete
@@ -127,12 +128,12 @@ Begin
 End;
 
 // Sorting an Integer array
-procedure TThIntArrSorter.QuickSort( var a: array of integer; min, max: Integer);
+procedure TThIntArrSorter.QuickSort( var a: array of integer; min, max: integer);
 Var
   i,j,
   mid,
   tmp
-          : integer;
+          : Int64;
 Begin
   if min < max then
   begin
@@ -264,31 +265,29 @@ End;
 
 
 // Saving to a file
-Procedure TThSorter.SaveToTxt( SortArr  : Array of Integer; StrName : String ); // SaveToTxt
+Procedure TThSorter.SaveToTxt( const SortArr : Array of Integer; const StrName : String ); // SaveToTxt
 var
-  i, j : Integer;
-  sl   : TStringList;
-  fs   : TFileStream;
+  i, j
+                : Integer;
+  fs            : TFileStream;
+  str           : String;
 Begin
-   sl := TStringList.Create;
-   try
-     for i := 0 to Length(SortArr)-1 do
-     Begin
-       sl.Add( IntToStr( SortArr[i] ) + '.' + StrName );
-     End;
+  for i := 0 to Length(SortArr)-1 do
+  Begin
+   str := str + IntToStr( SortArr[i] ) + '.' + StrName + #13#10;
+  End;
 
-     fs :=  TFileStream.Create( fOutFilePath, fmOpenReadWrite );
-     try
-        fs.Seek( 0, soFromEnd );
-        sl.SaveToStream(fs);
-     finally
-       fs.Destroy;
-     end;
+  fs :=  TFileStream.Create( fOutFilePath, fmOpenReadWrite );
+  try
+    fs.Seek( 0, soFromEnd );
 
-   finally
-     sl.Free;
-   end;
+    I := Length(str);
+    Fs.WriteBuffer(Pointer(str)^, i );
 
+  finally
+   str := '';
+   fs.Destroy;
+  end;
 End;
 
 // Custom sorting of strings
@@ -325,6 +324,7 @@ function TThSorter.Sorting( ) : boolean;                                        
         if ArrMatching[i] = Str then
         Begin
           result := i;
+          break;
         End;
       End;
     End;
@@ -361,6 +361,7 @@ var
   sl           : TStringList;
   ThSortWorker : Array of TThIntArrSorter ;
   tempIntRow   : Array [ 0..500 ] of ArrNoSort;
+
 Begin
   Result := false;
   sl := TStringList.Create;
@@ -440,14 +441,14 @@ Begin
       Begin
         ThSortWorker[i]            := TThIntArrSorter.Create(true);
         ThSortWorker[i].AIntArr    := ArrZipTable[i];
-        ThSortWorker[i].priority   := tpLowest;
+//        ThSortWorker[i].priority   := tpLowest;
 
         // Drawing progres
         fPbCurPos := Round(i * 100 / (length(ArrZipTable)));
         if fPbCurPos <>  fPbOldPos then
         Begin
           fPbOldPos := fPbCurPos;
-          fMes := 'Starting the sorting of numbers: ' + IntToStr(fPbCurPos)+'%';
+          fMes := 'Sorting of numbers: ' + IntToStr(fPbCurPos)+'%';
           Synchronize(ShowProgress);
         End;
 
@@ -460,6 +461,12 @@ Begin
         end;
 
         ThSortWorker[i].Resume;
+
+        // Load balancer, limits simultaneous start of worker threads
+        while GWorkerCnt > 10 do
+        Begin
+          sleep(1000);
+        end;
       End;
 
       // Timer for checking, shutting down threads
@@ -516,11 +523,11 @@ var
 
   FS          : TFilestream;
   sl          : TStringList;
-  buf         : array [0..1024] of byte;
+  buf         : array [0..4096] of byte;
   str, num    : AnsiString;
 
   // Uniqueness of the element
-  function CheckIsArrElUnic( Str : String; Arr : Array of String ): integer;
+  function CheckIsArrElUnic( const Str : String ): integer;
   var
     i, j : Integer;
   Begin
@@ -528,9 +535,9 @@ var
     if Str = '' then
       exit;
 
-    for i := 0 to length(Arr)-1 do
+    for i := 0 to length(GArrMatching)-1 do
     Begin
-      if Arr[i] = Str then
+      if GArrMatching[i] = Str then
       Begin
         result := i;
         break;
@@ -601,7 +608,7 @@ begin
             bintoAscii( buf, found13+1, j-1, str, num);
 
             // Checking the uniqueness
-            fndPosit := CheckIsArrElUnic(str, GArrMatching);
+            fndPosit := CheckIsArrElUnic(str);
             case fndPosit of
               // Mistake
               -1 : Begin
