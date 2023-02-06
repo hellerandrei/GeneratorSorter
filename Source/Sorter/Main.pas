@@ -14,20 +14,15 @@ const WM_MY_SORT_INFO = WM_USER + 1;
 
 type
 
-  DictArr    = Array of String;
-  ZipTable   = Array [0..500] of array of Integer;
-  ArrNoSort  = Array of integer;
+  ArrNoSort        = Array of integer;
 
 //................................ TThIntArrSorter .............................
 
   TThIntArrSorter = class(TThread)
   private
-    fTempArr   : array of Integer;
-    fIdx       : Integer;
     procedure QuickSort( var a: array of integer; min, max: Integer);
   public
-    fNoSortArr : ZipTable;
-    property AIdx   : Integer   write fIdx;
+    AIntArr : ArrNoSort;
   protected
     procedure Execute; override;
   end;
@@ -51,12 +46,12 @@ type
 
     fArrRndDict  : TStringList;                                                 // Container for generated data
 
-    fArrZipTable  : ZipTable;
+
 
     function GetFileSize( FileName: string): Int64;
 
     Function CreateMatchArr() : boolean;
-    Function Sorting( ArrZipTable  : ZipTable ) : boolean;
+    Function Sorting(  ) : boolean;
 
     Procedure BinToAscii(const Bin: array of Byte; FrStart, FrEnd : Integer; var Str, Number : AnsiString);
     Procedure SaveToTxt( SortArr  : Array of Integer; StrName : String );
@@ -109,8 +104,8 @@ var
   thSort              : TThSorter;
   CS                  : TCriticalSection;
 
-  GArrMatching        : Array [0..500] of  String;
-  GSortedStrZipTable  : ZipTable;
+  GArrMatching        : Array [ 0..500 ] of String;
+  ArrZipTable         : array [ 0..500 ] of ArrNoSort;
   GWorkerCnt                                                                    // Counter of running threads
                       : Integer;
 
@@ -123,25 +118,10 @@ implementation
 //------------------------------ TThIntArrSorter -------------------------------
 
 Procedure TThIntArrSorter.Execute;                                              // Execute
-var
-  i, j,
-  tmpVal
-             : Integer;
 Begin
   try
-    setLength(fTempArr, Length(fNoSortArr[fIdx]));
-    for i := 0 to Length(fNoSortArr[fIdx]) -1 do
-    Begin
-      fTempArr[i] := fNoSortArr[fIdx][i];
-    End;
-
     // Sorting the array
-    QuickSort(fTempArr, 0, length(fTempArr)-1);
-    for i := 0 to Length(fNoSortArr[fIdx]) -1 do
-    Begin
-      fNoSortArr[fIdx][i] := fTempArr[i];
-    End;
-    setLength(fTempArr, 0);
+    QuickSort(AIntArr, 0, length(AIntArr)-1);
 
   finally
     // Sorting is complete
@@ -164,24 +144,24 @@ Var
 Begin
   if min < max then
   begin
-    mid :=fTempArr [min];
+    mid :=a [min];
     i := min-1;
     j := max+1;
     while i<j do
     begin
       repeat
         i:=i+1;
-      until fTempArr[i]>=mid;
+      until a[i]>=mid;
 
       repeat
         j := j - 1;
-      until fTempArr[j] <= mid;
+      until a[j] <= mid;
 
       if i < j then
       begin
-        tmp:=fTempArr[i];
-        fTempArr[i]:=fTempArr[j];
-        fTempArr[j]:=tmp;
+        tmp:=a[i];
+        a[i]:=a[j];
+        a[j]:=tmp;
       end;
     end;
 
@@ -203,6 +183,7 @@ var
   msgType,
   msgVal
                   : Integer;
+  I: Integer;
 begin
   msgType := msg.wParam;
   msgVal  := msg.lParam;
@@ -229,6 +210,10 @@ begin
            3 :   // The thread is destroyed in the destructor
                  Begin
                    thSort := nil;
+                   for I := 0 to Length(ArrZipTable)-1 do
+                   Begin
+                     SetLength(ArrZipTable[i],0);
+                   End;
                  End;
 
            4 :   // One of the functions returned an error
@@ -270,7 +255,7 @@ Begin
 
     if CreateMatchArr() then
     Begin
-      if Sorting (fArrZipTable) then
+      if Sorting () then
       Begin
         // Message - Operation completed
         fPbCurPos := 0;
@@ -340,7 +325,7 @@ function CompareStringsAscending( List: TStringList;
   end;
 
 
-function TThSorter.Sorting( ArrZipTable  : ZipTable ) : boolean;                // Sorting
+function TThSorter.Sorting( ) : boolean;                                        // Sorting
   // Search in the array of matches by name
   function FindIdxFromArrMatchByName( ArrMatching : Array of String;
                                         Str : String ) : Integer;
@@ -388,6 +373,7 @@ var
                : Integer;
   sl           : TStringList;
   ThSortWorker : Array of TThIntArrSorter ;
+  tempIntRow   : Array [ 0..500 ] of ArrNoSort;
 Begin
   Result := false;
   sl := TStringList.Create;
@@ -431,10 +417,10 @@ Begin
       if fndIdx >= 0 then
       Begin
         // Filling in a temporary array
-        setLength( GSortedStrZipTable[i], length(ArrZipTable[fndIdx]) );
+        setLength( TempIntRow[i], length(ArrZipTable[fndIdx]) );
         for j := 0 to length(ArrZipTable[fndIdx]) -1 do
         begin
-          GSortedStrZipTable[i][j] := ArrZipTable[fndIdx][j];
+          TempIntRow[i][j] := ArrZipTable[fndIdx][j];
         end;
 
         // If done sequentially, without multithreading
@@ -442,10 +428,10 @@ Begin
         Begin
 
           // Sorting the Number part
-          SortIntArray( GSortedStrZipTable[i] );
+          SortIntArray( TempIntRow[i] );
 
           // Save to a file
-          SaveToTxt( GSortedStrZipTable[i], sl.Strings[i] );
+          SaveToTxt( TempIntRow[i], sl.Strings[i] );
         End;
       End;
     End;
@@ -453,19 +439,26 @@ Begin
     // Multithreaded version
     if fMultiTh then
     Begin
+      for i:=0 to Length(TempIntRow) -1 do
+      Begin
+        SetLength( ArrZipTable[i], Length(TempIntRow[i]) );
+        for j:=0 to Length(TempIntRow[i]) -1 do
+        Begin
+          ArrZipTable[i][j] := TempIntRow[i][j];
+        end;
+      End;
 
       // We perform sorting in different threads
-      SetLength(ThSortWorker, length(GSortedStrZipTable));
+      SetLength(ThSortWorker, length(ArrZipTable));
 
-      for i := 0 to length(GSortedStrZipTable)-1 do
+      for i := 0 to length(ArrZipTable)-1 do
       Begin
         ThSortWorker[i]            := TThIntArrSorter.Create(true);
-        ThSortWorker[i].fNoSortArr := GSortedStrZipTable;
+        ThSortWorker[i].AIntArr    := ArrZipTable[i];
         ThSortWorker[i].priority   := tpLowest;
-        ThSortWorker[i].fIdx       := i;
 
         // Drawing progres
-        fPbCurPos := Round(i * 100 / (length(GSortedStrZipTable)));
+        fPbCurPos := Round(i * 100 / (length(ArrZipTable)));
         if fPbCurPos <>  fPbOldPos then
         Begin
           fPbOldPos := fPbCurPos;
@@ -510,7 +503,7 @@ Begin
         End;
 
         // Save to a file
-        SaveToTxt( GSortedStrZipTable[i], sl.Strings[i] );
+        SaveToTxt( ArrZipTable[i], sl.Strings[i] );
       End;
 
     End;
@@ -589,11 +582,10 @@ begin
         exit;
       End;
 
-
       if readEnd > readStart then
         readStart := readEnd;
 
-      // Drawing progres
+      // Drawing progress
       fPbCurPos := Round(readEnd * 100 / maxFsSize);
       if fPbCurPos <>  fPbOldPos then
       Begin
@@ -635,15 +627,15 @@ begin
               // A unique string, will be the first element in the fArrZipTable
               -2 : Begin
                     GArrMatching[arrMachInx] := str;
-                    SetLength( fArrZipTable[arrMachInx], 1 );
-                    fArrZipTable[arrMachInx][0] := StrToInt( copy(num, 1, pos('.',num)-1 ));
+                    SetLength( ArrZipTable[arrMachInx], 1 );
+                    ArrZipTable[arrMachInx][0] := StrToInt( copy(num, 1, pos('.',num)-1 ));
                     inc(arrMachInx);
                    End
               else
                   // Not a unique string, we add it to the dynamic array in fArrZipTable
                   Begin
-                    SetLength( fArrZipTable[fndPosit], length(fArrZipTable[fndPosit])+1 );
-                    fArrZipTable[fndPosit][length(fArrZipTable[fndPosit])-1] := StrToInt( copy(num, 1, pos('.',num)-1 ));
+                    SetLength( ArrZipTable[fndPosit], length(ArrZipTable[fndPosit])+1 );
+                    ArrZipTable[fndPosit][length(ArrZipTable[fndPosit])-1] := StrToInt( copy(num, 1, pos('.',num)-1 ));
                   End;
             end;
             found13 := j+1;
