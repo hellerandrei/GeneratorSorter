@@ -161,8 +161,8 @@ begin
 End;
 
 
-
-procedure TfMain.b_GenerateClick(Sender: TObject);                              // b_Generate - Создание, завершение потока
+// Creation, completion of the stream
+procedure TfMain.b_GenerateClick(Sender: TObject);                              // b_Generate
 var
   fileSize  : Int64;
   owerWrite : Boolean;
