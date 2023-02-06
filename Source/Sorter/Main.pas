@@ -38,25 +38,18 @@ type
     fInFilePath,                                                                // Source file
     fOutFilePath                                                                // The resulting file
                  : String;
-
     fPbCurPos, fPbOldPos                                                        // Variables for progresbar
                  : Int64;
-
     fMultiTh     : Boolean;                                                     // Multithreaded or sequential, time difference
-
     fArrRndDict  : TStringList;                                                 // Container for generated data
 
-
-
     function GetFileSize( FileName: string): Int64;
-
     Function CreateMatchArr() : boolean;
     Function Sorting(  ) : boolean;
 
     Procedure BinToAscii(const Bin: array of Byte; FrStart, FrEnd : Integer; var Str, Number : AnsiString);
     Procedure SaveToTxt( SortArr  : Array of Integer; StrName : String );
   public
-
     property AInFilePath   : String   write fInFilePath;
     property AOutFilePath  : String   write fOutFilePath;
     property AMultiTh      : Boolean  write fMultiTh;
@@ -112,7 +105,6 @@ var
 implementation
 
 {$R *.dfm}
-
 
 
 //------------------------------ TThIntArrSorter -------------------------------
