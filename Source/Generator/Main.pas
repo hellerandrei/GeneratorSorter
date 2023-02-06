@@ -143,6 +143,7 @@ begin
                    if MessageDlg('The selected size exceeds the existing file size! Rewrite it?', mtError, mbOKCancel, 0) = mrOK then
                    Begin
                      fMain.chb_OwerWriting.checked := true;
+                     fMain.b_Generate.Caption      := 'Generate';
                      fMain.b_Generate.Click;
                    End
                    else
